@@ -6,5 +6,8 @@ set(CMAKE_CXX_STANDARD 11)
 
 include_directories(src)
 
-set(SOURCE_FILES main.cpp src/data_structures/boids.h src/definitions/types.h)
+set(SOURCE_FILES
+        main.cpp
+        src/data_structures/Boid.h
+        src/definitions/types.h)
 add_executable(Swarming_project ${SOURCE_FILES})
