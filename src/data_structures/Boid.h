@@ -21,6 +21,8 @@ constexpr float BORDER_SEPARATION_NORMALISER = 1.0;
 constexpr float SEPARATION_MIN_DISTANCE = 1.0;
 constexpr float BORDER_SEPARATION_MIN_DISTANCE = 1.0;
 
+constexpr float TIMESTEP = 1.0;
+
 /**
  * Struct that represents a boid agent.
  * @tparam Position     spatial coordinates of the agent.
@@ -130,6 +132,29 @@ public:
             }
         }
         return center;
+    }
+
+    /**
+     * updates all forces at once
+     * @param neighbours list of the boids who influence the current agent
+     * @param bottom_left     bottom-left corner of the space we want to simulate.
+     * @param top_right       top-right corner of the space we want to simulate.
+     */
+    void update_forces(const std::vector<Boid> & neighbours, Position<Dimension> const & bottom_left, Position<Dimension> const & top_right) {
+        cohesion_update(neighbours);
+        separation_update(neighbours);
+        border_force_update(bottom_left, top_right);
+    }
+
+    /**
+     * updates velocity from forces
+     * @param neighbours list of the boids who influence the current agent
+     */
+    void update_velocity(const std::vector<Boid> & neighbours) {
+        alignment_update(neighbours);
+        for (int j=0; j<Dimension; j++) {
+            m_velocity[j] += m_force[j]*TIMESTEP;
+        }
     }
 
 private:
