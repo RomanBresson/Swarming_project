@@ -13,7 +13,15 @@ int main() {
     Vector3Pos top_right({10.0, 10.0, 10.0});
     Grid< std::uniform_real_distribution<float>, 3 > grid( bottom_left, top_right, 10 );
 
-    std::cout << grid << std::endl;
+    //std::cout << grid << std::endl;
+    std::vector<Boid <std::uniform_real_distribution<float>, 3> > vec;
+    for(int i=0; i<9; i++){
+        Boid<std::uniform_real_distribution<float>, 3> bob(bottom_left, top_right);
+        bob.cohesion_update(vec);
+        bob.separation_update(vec);
+        std::cout << bob << std::endl;
+        vec.push_back(bob);
+    }
 
     return 0;
 }
