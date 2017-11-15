@@ -25,9 +25,9 @@ struct Boid {
         std::default_random_engine generator(d());
         for(std::size_t i{0}; i < Dimension; ++i) {
             Distribution distribution(bottom_left[i], top_right[i]);
-            this->m_position[i] = distribution(generator);
-            this->m_velocity[i] = 0.0;
-            this->m_force[i]    = 0.0;
+            m_position[i] = distribution(generator);
+            m_velocity[i] = 0.0;
+            m_force[i]    = 0.0;
         }
     }
 
