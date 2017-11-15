@@ -12,6 +12,7 @@ namespace types {
     using PositionType = float;
     using VelocityType = float;
     using ForceType    = float;
+    using DistanceType = float;
 
     template <std::size_t Size> using Position = ArrayType<PositionType, Size>;
     template <std::size_t Size> using Velocity = ArrayType<VelocityType, Size>;
