@@ -74,7 +74,7 @@ public:
      */
     void separation_update(const std::vector<Boid> & neighbours) {
         for(auto const & neighbour : neighbours) {
-            if(is_visible(neighbour)) {
+            if(is_visible(neighbour)) { //Shouldn't we only pass those as arguments in neighbours ?
                 for(std::size_t j{0}; j < Dimension; ++j) {
                     m_force[j] += SEPARATION_NORMALISER*(m_position[j]-neighbour.m_position[j]);
                 }
