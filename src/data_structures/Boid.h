@@ -16,8 +16,10 @@ using types::DistanceType;
 constexpr float COHESION_NORMALISER = 0.01;
 constexpr float ALIGNMENT_NORMALISER = 0.125;
 constexpr float SEPARATION_NORMALISER = 1.0;
-constexpr float SEPARATION_MIN_DISTANCE = 1.0;
+constexpr float BORDER_SEPARATION_NORMALISER = 1.0;
 
+constexpr float SEPARATION_MIN_DISTANCE = 1.0;
+constexpr float BORDER_SEPARATION_MIN_DISTANCE = 1.0;
 
 /**
  * Struct that represents a boid agent.
@@ -101,7 +103,16 @@ public:
      * @todo For the moment the force is linear. We probably want to change it to inverse of the distance between the
      * two boids.
      */
-    void border_force_update(Position<Dimension> const & bottom_left, Position<Dimension> const & top_right);
+    void border_force_update(Position<Dimension> const & bottom_left, Position<Dimension> const & top_right){
+        for (int j=0; j<Dimension; j++) {
+            if(abs(m_position[j]-bottom_left[j]) <= SEPARATION_MIN_DISTANCE){
+                m_force[j] += BORDER_SEPARATION_NORMALISER*(m_position[j]-bottom_left[j]);
+            }
+            if (abs(m_position[j]-top_right[j])<= SEPARATION_MIN_DISTANCE){
+                m_force[j] += BORDER_SEPARATION_NORMALISER*(m_position[j]-top_right[j]);
+            }
+        }
+    }
 
     /**
      * Computes the center of mass of a number of boids
