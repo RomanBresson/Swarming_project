@@ -55,7 +55,17 @@ public:
      * Computes the force of alignment applied on the boid, then updates the boid's force parameter.
      * @param neighbours list of the boids that are close enough to the agent to apply the force.
      */
-    void alignement_update  (const std::vector<Boid> & neighbours);
+    void alignment_update  (const std::vector<Boid> & neighbours) {
+        if(neighbours.size() != 0){
+            for(auto const & neighbour : neighbours) {
+                if(is_visible(neighbour)) { //Shouldn't we only pass those as arguments in neighbours ?
+                    for(std::size_t j{0}; j < Dimension; ++j) {
+                        m_velocity[j] += ALIGNMENT_NORMALISER*neighbour.m_velocity[j]/neighbours.size();
+                    }
+                }
+            }
+        }
+    }
 
     /**
      * Computes the force of cohesion applied on the boid, then updates the boid's force parameter.
