@@ -14,8 +14,8 @@ using types::Force;
 using types::DistanceType;
 
 constexpr float COHESION_NORMALISER = 0.01;
-constexpr float ALIGNEMENT_NORMALISER = 0.01;
-constexpr float SEPARATION_NORMALISER = 0.01;
+constexpr float ALIGNMENT_NORMALISER = 0.125;
+constexpr float SEPARATION_NORMALISER = 1.0;
 constexpr float SEPARATION_MIN_DISTANCE = 1.0;
 
 
