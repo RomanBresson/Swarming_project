@@ -18,11 +18,16 @@ struct Boid {
 
   Boid(const Vector3Pos & min_corner, const Vector3Pos & max_corner);
 
-  std::string toString();
-/*  void alignement_update(const Grid &);
-  void cohesion_update(const Grid &);
-  void separation_update(const Grid &);
-  void border_force_update(const Grid &);*/
+  std::string toString() const;
+
+  int get_type() const;
+
+  Vector3Pos compute_center_of_mass(const std::vector<Boid> &);
+
+  void alignment_update(const std::vector<Boid> &);
+  void cohesion_update(const std::vector<Boid> &);
+  void separation_update(const std::vector<Boid> &);
+  void border_force_update(const std::vector<Boid> &);
 
 };
 
