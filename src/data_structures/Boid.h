@@ -30,6 +30,9 @@ class Boid {
 
 public:
 
+    Position<Dimension> m_position;
+    Velocity<Dimension> m_velocity;
+    Force   <Dimension> m_force;
     /**
      * Constructor for the Boid class.
      * @param bottom_left     bottom-left corner of the space we want to simulate.
@@ -137,10 +140,6 @@ private:
         }
         return distance;
     }
-
-    Position<Dimension> m_position;
-    Velocity<Dimension> m_velocity;
-    Force   <Dimension> m_force;
 
 };
 
