@@ -56,6 +56,9 @@ public:
         }
     }
 
+    /**
+     * Randomly re-create all the boids contained in the Grid.
+     */
     void shuffle() {
         for(auto & boid : m_boids) {
             boid = Boid<Distribution, Dimension>(m_bottom_left, m_top_right);

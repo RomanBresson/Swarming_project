@@ -1,29 +1,28 @@
 #include <iostream>
 #include "data_structures/Boid.h"
 #include "data_structures/Grid.h"
-#include "definitions/types.h"
 #include "visualization/GridVisualizer.h"
 
-constexpr const std::size_t Dimension{2};
-constexpr const std::size_t nb_of_boids{50};
+constexpr const std::size_t DIMENSION{2};
+constexpr const std::size_t NUMBER_OF_BOIDS{50};
 using types::Position;
 
 int main() {
-    Position<Dimension> bottom_left({0.0, 0.0});
-    Position<Dimension> top_right({10.0, 10.0});
+    Position<DIMENSION> bottom_left({0.0, 0.0});
+    Position<DIMENSION> top_right({10.0, 10.0});
 
-    Grid< std::uniform_real_distribution<float>, Dimension > grid( bottom_left, top_right, 100 );
-    GridVisualizer<std::uniform_real_distribution<float>, Dimension> visualizer(grid);
+    Grid<std::uniform_real_distribution<float>, DIMENSION> grid(bottom_left, top_right, NUMBER_OF_BOIDS);
+    GridVisualizer<std::uniform_real_distribution<float>, DIMENSION> visualizer(grid);
 
     visualizer.start();
 
     /*
-    Grid< std::uniform_int_distribution<int>, Dimension > grid( bottom_left, top_right, nb_of_boids );
+    Grid< std::uniform_int_distribution<int>, DIMENSION > grid( bottom_left, top_right, NUMBER_OF_BOIDS );
     for(int t = 0; t<1000; t++){
         std::cout << grid << std::endl;
-        for(int i=0; i<nb_of_boids; i++){
-            std::vector<Boid<std::uniform_int_distribution<int>, Dimension> > neighbours;
-            for(int j=0; j<nb_of_boids; j++){
+        for(int i=0; i<NUMBER_OF_BOIDS; i++){
+            std::vector<Boid<std::uniform_int_distribution<int>, DIMENSION> > neighbours;
+            for(int j=0; j<NUMBER_OF_BOIDS; j++){
                 if (i!=j){
                     if (grid.m_boids[i].is_visible(grid.m_boids[j])){
                         neighbours.push_back(grid.m_boids[j]);
@@ -43,7 +42,7 @@ int main() {
      */
     /*
     for(int j = 0; j<1000; j++){
-        for(int i=0; i<nb_of_boids; i++){
+        for(int i=0; i<NUMBER_OF_BOIDS; i++){
             vec[i].update_forces(vec, bottom_left, top_right);
             vec[i].update_velocity(vec);
             //std::cout << vec[i] << std::endl;
