@@ -18,12 +18,12 @@ constexpr float PI = 3.14159265;
 constexpr float COHESION_NORMALISER = 0.01;
 constexpr float ALIGNMENT_NORMALISER = 0.125;
 constexpr float SEPARATION_NORMALISER = 1.0;
-constexpr float BORDER_SEPARATION_NORMALISER = 0.5;
+constexpr float BORDER_SEPARATION_NORMALISER = 1.0;
 
 constexpr float VISION_DISTANCE = 3.0;
 constexpr float VISION_ANGLE = 90.0; //In degrees
 
-constexpr float SEPARATION_MIN_DISTANCE = 1.0;
+constexpr float SEPARATION_MIN_DISTANCE = 0.5;
 constexpr float BORDER_SEPARATION_MIN_DISTANCE = 1.0;
 
 constexpr float MAX_SPEED = 5.0;
@@ -115,7 +115,7 @@ public:
     void border_force_update(Position<Dimension> const & bottom_left, Position<Dimension> const & top_right){
         for (int j=0; j<Dimension; j++) {
             if(abs(m_position[j]-bottom_left[j]) <= SEPARATION_MIN_DISTANCE){
-                m_force[j] += BORDER_SEPARATION_NORMALISER*(m_position[j]-bottom_left[j]);
+                m_force[j] += BORDER_SEPARATION_NORMALISER/(m_position[j]-bottom_left[j]);
             }
             if (abs(m_position[j]-top_right[j])<= SEPARATION_MIN_DISTANCE){
                 m_force[j] += BORDER_SEPARATION_NORMALISER*(m_position[j]-top_right[j]);
@@ -148,6 +148,9 @@ public:
      * @param top_right       top-right corner of the space we want to simulate.
      */
     void update_forces(const std::vector<Boid> & neighbours, Position<Dimension> const & bottom_left, Position<Dimension> const & top_right) {
+        for (int j=0; j<Dimension; j++) {
+            m_force[j] = 0.0;
+        }
         cohesion_update(neighbours);
         separation_update(neighbours);
         border_force_update(bottom_left, top_right);
@@ -159,8 +162,31 @@ public:
      */
     void update_velocity(const std::vector<Boid> & neighbours) {
         alignment_update(neighbours);
+        float velocity_norm_squared = 0.0;
         for (int j=0; j<Dimension; j++) {
             m_velocity[j] += m_force[j]*TIMESTEP;
+            velocity_norm_squared += m_velocity[j]*m_velocity[j];
+        }
+        if (velocity_norm_squared > MAX_SPEED*MAX_SPEED) {
+            for (int j=0; j<Dimension; j++) {
+                m_velocity[j] *= MAX_SPEED/pow(velocity_norm_squared, 0.5);
+            }
+        }
+    }
+
+    /**
+     * updates velocity from forces
+     * @param neighbours list of the boids who influence the current agent
+     */
+    void update_position(Position<Dimension> const & bottom_left, Position<Dimension> const & top_right) {
+        for (int j=0; j<Dimension; j++) {
+            m_position[j] += m_velocity[j]*TIMESTEP;
+            if (m_position[j] >= top_right[j] - 0.1*BORDER_SEPARATION_MIN_DISTANCE){
+                m_position[j] = top_right[j] - 0.1*BORDER_SEPARATION_MIN_DISTANCE;
+            }
+            if (m_position[j] <= bottom_left[j] + 0.1*BORDER_SEPARATION_MIN_DISTANCE){
+                m_position[j] = bottom_left[j] + 0.1*BORDER_SEPARATION_MIN_DISTANCE;
+            }
         }
     }
 
