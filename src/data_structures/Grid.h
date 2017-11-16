@@ -56,8 +56,13 @@ public:
         }
     }
 
+    void shuffle() {
+        for(auto & boid : m_boids) {
+            boid = Boid<Distribution, Dimension>(m_bottom_left, m_top_right);
+        }
+    }
 
-private:
+// private:
 
     /**
      * The bottom-left corner of the space (i.e. the point of the space with the lowest
