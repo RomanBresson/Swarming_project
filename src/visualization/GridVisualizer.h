@@ -17,6 +17,12 @@
 
 using types::Position;
 
+/**
+ * Visualizer for the Grid class.
+ *
+ * @tparam Distribution probability distribution used for the boids in the grid we want to visualize.
+ * @tparam Dimension    dimension of the space represented by the grid we want to visualize.
+ */
 template <typename Distribution, std::size_t Dimension>
 class GridVisualizer {
 
@@ -26,12 +32,19 @@ class GridVisualizer {
 
 public:
 
+    /**
+     * Construct an instance of Visualizer.
+     *
+     * The grid must be given as a non-const reference because we will update it directly
+     * in the event-loop of VTK.
+     *
+     * @param grid a non-constant reference on the grid we want to visualize.
+     */
     explicit GridVisualizer(Grid<Distribution, Dimension> & grid)
             : m_grid(grid),
               m_renderer(vtkSmartPointer<vtkRenderer>::New()),
               m_render_window(vtkSmartPointer<vtkRenderWindow>::New()),
-              m_render_window_interactor(vtkSmartPointer<vtkRenderWindowInteractor>::New())
-    {
+              m_render_window_interactor(vtkSmartPointer<vtkRenderWindowInteractor>::New()) {
         initialize_boids();
         m_render_window->AddRenderer(m_renderer);
         m_render_window_interactor->SetRenderWindow(m_render_window);
@@ -47,12 +60,19 @@ public:
         m_render_window_interactor->CreateRepeatingTimer(gconst::UPDATE_DELAY_MS);
     }
 
-
+    /**
+     * Launch the visualization.
+     *
+     * Calls vtkRenderWindowInteractor::Start and start the event-loop of VTK.
+     */
     void start() {
         // Launch the visualization
         m_render_window_interactor->Start();
     }
 
+    /**
+     * Initialize the data structure for plotting the boids.
+     */
     void initialize_boids() {
         std::size_t i{0};
         for(const auto & boid : m_grid.m_boids) {
@@ -64,8 +84,16 @@ public:
 
 private:
 
-    void create_boid_for_rendering(const Boid<Distribution, Dimension> &boid)
-    {
+    /**
+     * Create all the data structures needed to visualize one boid.
+     *
+     * For the moment, the visualization of a boid is only a circle. We can improve
+     * this by representing a boid as a triangle and take into account the current
+     * orientation of the boid.
+     *
+     * @param boid boid we want to add to the visualization.
+     */
+    void create_boid_for_rendering(const Boid<Distribution, Dimension> &boid) {
         double buffer[gconst::VTK_COORDINATES_NUMBER];
 
         // Compute the center of the circle
@@ -93,7 +121,6 @@ private:
         // Add the created actor to the renderer
         m_renderer->AddActor(actor);
     }
-
 
     Grid<Distribution, Dimension> & m_grid;
 

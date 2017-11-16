@@ -44,6 +44,7 @@ public:
     Position<Dimension> m_position;
     Velocity<Dimension> m_velocity;
     Force   <Dimension> m_force;
+
     /**
      * Constructor for the Boid class.
      * @param bottom_left     bottom-left corner of the space we want to simulate.
@@ -90,6 +91,7 @@ public:
             }
         }
     }
+
     /**
      * Computes the force of separation applied on the boid, then updates the boid's force parameter.
      * @param neighbours list of the boids that are close enough to the agent to apply the force.
@@ -105,6 +107,7 @@ public:
             }
         }
     }
+
     /**
      * Computes the force of repulsion applied on the boid by the borders of the grid, then updates the boid's
      * force parameter.
