@@ -42,7 +42,7 @@ private:
     void update_boids() {
         double buffer[gconst::VTK_COORDINATES_NUMBER];
 
-        m_grid.shuffle();
+        m_grid.update_all_boids();
 
         auto actors = m_renderer->GetActors();
         actors->InitTraversal();

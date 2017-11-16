@@ -62,6 +62,28 @@ public:
         }
     }
 
+    /**
+     * Computes forces, velocity and then position for all boids and updates them
+     *
+     */
+    void update_all_boids() {
+        for(int i = 0; i<m_boids.size(); i++) {
+            std::vector<Boid<Distribution, Dimension> > neighbours;
+            for(int j = 0; j<m_boids.size(); j++){
+                if (i!=j){
+                    if (m_boids[i].is_visible(m_boids[j])){
+                        neighbours.push_back(m_boids[j]);
+                    }
+                }
+            }
+            m_boids[i].update_forces(neighbours, m_bottom_left, m_top_right);
+            m_boids[i].update_velocity(neighbours);
+        }
+        for(auto & boid : m_boids) {
+            boid.update_position(m_bottom_left, m_top_right);
+        }
+    }
+
 //private:
 
     /**

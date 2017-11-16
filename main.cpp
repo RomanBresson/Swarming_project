@@ -17,10 +17,12 @@ int main() {
 
     visualizer.start();
 
-    /*
-    Grid< std::uniform_int_distribution<int>, Dimension > grid( bottom_left, top_right, nb_of_boids );
+
+    //Grid< std::uniform_int_distribution<int>, Dimension > grid( bottom_left, top_right, nb_of_boids );
     for(int t = 0; t<1000; t++){
+        grid.update_all_boids();
         std::cout << grid << std::endl;
+    }/*
         for(int i=0; i<nb_of_boids; i++){
             std::vector<Boid<std::uniform_int_distribution<int>, Dimension> > neighbours;
             for(int j=0; j<nb_of_boids; j++){
