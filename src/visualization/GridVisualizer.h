@@ -13,6 +13,7 @@
 #include "definitions/graphical_constants.h"
 #include "data_structures/Grid.h"
 #include "data_structures/Boid.h"
+#include "visualization/vtkTimerCallback.h"
 
 using types::Position;
 
@@ -21,39 +22,55 @@ class GridVisualizer {
 
     static_assert(Dimension == 2 || Dimension == 3, "The Dimension of the Visualizer can only be 2 or 3.");
 
+    using TimerCallback = vtkTimerCallback<Distribution, Dimension>;
+
 public:
 
-    explicit GridVisualizer(const Grid<Distribution, Dimension> & grid)
+    explicit GridVisualizer(Grid<Distribution, Dimension> & grid)
             : m_grid(grid),
-              m_buffer(),
               m_renderer(vtkSmartPointer<vtkRenderer>::New()),
               m_render_window(vtkSmartPointer<vtkRenderWindow>::New()),
               m_render_window_interactor(vtkSmartPointer<vtkRenderWindowInteractor>::New())
     {
+        initialize_boids();
         m_render_window->AddRenderer(m_renderer);
         m_render_window_interactor->SetRenderWindow(m_render_window);
+
+        // Now register the time event for the updates.
+        m_render_window_interactor->Initialize();
+
+        // Sign up to receive TimerEvent
+        vtkSmartPointer<TimerCallback> callback = TimerCallback::New(m_grid, m_renderer);
+        m_render_window_interactor->AddObserver(vtkCommand::TimerEvent, callback);
+
+        // Create the TimerEvent
+        m_render_window_interactor->CreateRepeatingTimer(gconst::UPDATE_DELAY_MS);
     }
 
-    void render() {
-        std::cout << "Drawing the boids... " << std::flush;
-        for(const Boid<Distribution, Dimension> & boid : m_grid.m_boids) {
-            draw_boid(boid);
+
+    void start() {
+        // Launch the visualization
+        m_render_window_interactor->Start();
+    }
+
+    void initialize_boids() {
+        std::size_t i{0};
+        for(const auto & boid : m_grid.m_boids) {
+            create_boid_for_rendering(boid);
+            ++i;
         }
-        std::cout << "\rBoids drawed!" << std::endl;
-        std::cout << "Rendering... " << std::flush;
-        m_render_window_interactor->Render();
-        std::cout << "\rRendered!" << std::endl;
+        std::cout << "Created " << i << " boids." << std::endl;
     }
-
 
 private:
 
-    template <typename Distribution2>
-    void draw_boid(const Boid<Distribution2, Dimension> & boid)
+    void create_boid_for_rendering(const Boid<Distribution, Dimension> &boid)
     {
+        double buffer[gconst::VTK_COORDINATES_NUMBER];
+
         // Compute the center of the circle
         for(std::size_t i{0}; i < Dimension; ++i) {
-            m_buffer[i] = static_cast<double>(boid.m_position[i]);
+            buffer[i] = static_cast<double>(boid.m_position[i]);
         }
 
         // Create a circle
@@ -62,7 +79,6 @@ private:
         //circle->GeneratePolygonOff();
         circle->SetNumberOfSides(gconst::BOID_NUMBER_OF_SIDES);
         circle->SetRadius(gconst::BOID_RADIUS);
-        circle->SetCenter(m_buffer);
 
         // Create the mapper and the actor
         vtkSmartPointer<vtkPolyDataMapper> mapper =
@@ -72,15 +88,14 @@ private:
         vtkSmartPointer<vtkActor> actor =
                 vtkSmartPointer<vtkActor>::New();
         actor->SetMapper(mapper);
+        actor->SetPosition(buffer);
 
         // Add the created actor to the renderer
         m_renderer->AddActor(actor);
     }
 
 
-    const Grid<Distribution, Dimension> & m_grid;
-
-    double m_buffer[gconst::VTK_COORDINATES_NUMBER];
+    Grid<Distribution, Dimension> & m_grid;
 
     vtkSmartPointer<vtkRenderer> m_renderer;
     vtkSmartPointer<vtkRenderWindow> m_render_window;
