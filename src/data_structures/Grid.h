@@ -57,7 +57,7 @@ public:
     }
 
 
-private:
+//private:
 
     /**
      * The bottom-left corner of the space (i.e. the point of the space with the lowest
