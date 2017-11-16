@@ -19,7 +19,6 @@ set(SOURCE_FILES
         src/data_structures/MathArray.h
         # Definitions
         src/definitions/types.h
-        src/definitions/vtk_types.h
         src/definitions/graphical_constants.h
         # Visualization part
         src/visualization/GridVisualizer.h
