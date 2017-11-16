@@ -1,13 +1,14 @@
 #ifndef SWARMING_PROJECT_TYPES_H
 #define SWARMING_PROJECT_TYPES_H
 
-#include <array>
 #include <ostream>
+
+#include "data_structures/MathArray.h"
 
 namespace types {
 
     template <typename T, std::size_t S>
-    using ArrayType    = std::array<T, S>;
+    using ArrayType    = MathArray<T, S>;
 
     using PositionType = float;
     using VelocityType = float;

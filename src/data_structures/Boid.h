@@ -122,7 +122,7 @@ public:
      */
     Position<Dimension> compute_center_of_mass(const std::vector<Boid> & neighbours) {
         if (neighbours.size() == 0){ // no neighbours are perceived : no influence must be had on our current boid
-            return(Position<Dimension>{-1});
+            return Position<Dimension>(-1.0f);
         }
         Position<Dimension> center{};
         for(auto const & neighbour : neighbours) {
