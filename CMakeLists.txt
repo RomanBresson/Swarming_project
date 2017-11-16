@@ -7,8 +7,24 @@ set(CMAKE_CXX_FLAGS "-std=gnu++11")
 
 include_directories(src)
 
+find_package(VTK REQUIRED)
+include(${VTK_USE_FILE})
+
 set(SOURCE_FILES
+        # Entry point
         main.cpp
+        # Data structures
         src/data_structures/Boid.h
-        src/definitions/types.h src/data_structures/Grid.h)
+        src/data_structures/Grid.h
+        src/data_structures/MathArray.h
+        # Definitions
+        src/definitions/types.h
+        src/definitions/vtk_types.h
+        src/definitions/graphical_constants.h
+        # Visualization part
+        src/visualization/GridVisualizer.h
+        src/visualization/vtkTimerCallback.h
+        )
+
 add_executable(Swarming_project ${SOURCE_FILES})
+target_link_libraries(Swarming_project ${VTK_LIBRARIES})
