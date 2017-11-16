@@ -13,13 +13,20 @@ using types::Velocity;
 using types::Force;
 using types::DistanceType;
 
+
+constexpr float PI = 3.14159265;
 constexpr float COHESION_NORMALISER = 0.01;
 constexpr float ALIGNMENT_NORMALISER = 0.125;
 constexpr float SEPARATION_NORMALISER = 1.0;
-constexpr float BORDER_SEPARATION_NORMALISER = 1.0;
+constexpr float BORDER_SEPARATION_NORMALISER = 0.5;
+
+constexpr float VISION_DISTANCE = 3.0;
+constexpr float VISION_ANGLE = 90.0; //In degrees
 
 constexpr float SEPARATION_MIN_DISTANCE = 1.0;
 constexpr float BORDER_SEPARATION_MIN_DISTANCE = 1.0;
+
+constexpr float MAX_SPEED = 5.0;
 
 constexpr float TIMESTEP = 1.0;
 
@@ -48,9 +55,9 @@ public:
         std::random_device d;
         std::default_random_engine generator(d());
         for(std::size_t i{0}; i < Dimension; ++i) {
-            Distribution distribution(bottom_left[i], top_right[i]);
+            Distribution distribution(bottom_left[i]+BORDER_SEPARATION_MIN_DISTANCE, top_right[i]-BORDER_SEPARATION_MIN_DISTANCE);
             m_position[i] = distribution(generator);
-            m_velocity[i] = 0.0;
+            m_velocity[i] = distribution(generator)/10.0;
             m_force[i]    = 0.0;
         }
     }
@@ -157,7 +164,7 @@ public:
         }
     }
 
-private:
+//private:
 
     /**
      * Tell wether or not a given boid is visible by the current instance.
@@ -168,7 +175,45 @@ private:
     template <typename D>
     bool is_visible(const Boid<D, Dimension> & boid) {
         DistanceType const squared_distance{ this->squared_euclidian_distance(boid) };
-        return squared_distance <= SEPARATION_MIN_DISTANCE * SEPARATION_MIN_DISTANCE;
+        if (squared_distance <= VISION_DISTANCE*VISION_DISTANCE) {
+            return compute_angle(boid) < VISION_ANGLE;
+        }
+    }
+
+    /**
+     * Computes the scalar product between the orientation of the current boid and its relative position to the target boid
+     * @tparam D   probability distribution of the other boid.
+     * @param boid the other boid.
+     * @return     normalized scalar product .
+     */
+    template <typename D>
+    float scalar_product(const Boid<D, Dimension> & boid) {
+        float scalar_product = 0.0;
+        float norm_self = 0.0;
+        float norm_boid = 0.0;
+        for (int j=0; j<Dimension; j++) {
+            scalar_product += m_velocity[j]*(boid.m_position[j]-m_position[j]);
+            norm_self += m_velocity[j]*m_velocity[j];
+            norm_boid += (boid.m_position[j]-m_position[j])*(boid.m_position[j]-m_position[j]);
+        }
+        if (norm_self != 0.0) {
+            scalar_product/=norm_self;
+        }
+        if (norm_boid != 0.0) {
+            scalar_product/=norm_boid;
+        }
+        return scalar_product;
+    }
+
+    /**
+     * Computes the angle between the orientation of the current boid and its relative position to the target boid
+     * @tparam D   probability distribution of the other boid.
+     * @param boid the other boid.
+     * @return     angle between a boid's orientation and another boid.
+     */
+    template <typename D>
+    float compute_angle(const Boid<D, Dimension> & boid) {
+        return acos(scalar_product(boid))*180.0/PI;
     }
 
     /**
