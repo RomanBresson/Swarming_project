@@ -26,6 +26,8 @@ using namespace constants;
 template <typename Distribution, std::size_t Dimension>
 class Boid {
 
+    using ThisType = Boid<Distribution, Dimension>;
+
 public:
 
     Position<Dimension> m_position;
@@ -43,9 +45,10 @@ public:
         std::random_device d;
         std::default_random_engine generator(d());
         for(std::size_t i{0}; i < Dimension; ++i) {
-            Distribution distribution(bottom_left[i]+BORDER_SEPARATION_MIN_DISTANCE, top_right[i]-BORDER_SEPARATION_MIN_DISTANCE);
+            Distribution distribution(bottom_left[i]+BORDER_SEPARATION_MIN_DISTANCE,
+                                      top_right[i]-BORDER_SEPARATION_MIN_DISTANCE);
             m_position[i] = distribution(generator);
-            m_velocity[i] = distribution(generator)/10.0;
+            m_velocity[i] = 0.0;
             m_force[i]    = 0.0;
         }
     }
@@ -54,28 +57,27 @@ public:
      * Computes the force of alignment applied on the boid, then updates the boid's force parameter.
      * @param neighbours list of the boids that are close enough to the agent to apply the force.
      */
-    void alignment_update  (const std::vector<Boid> & neighbours) {
-        if(neighbours.size() != 0){
-            for(auto const & neighbour : neighbours) {
-                if(is_visible(neighbour)) { //Shouldn't we only pass those as arguments in neighbours ?
-                    for(std::size_t j{0}; j < Dimension; ++j) {
-                        m_velocity[j] += ALIGNMENT_NORMALISER*neighbour.m_velocity[j]/neighbours.size();
-                    }
-                }
-            }
+    template <typename Distribution2>
+    void alignment_update(const std::vector<Boid<Distribution2, Dimension>> & neighbours) {
+        Force<Dimension> alignement(0.0);
+        const auto multiplier = ALIGNMENT_NORMALISER / neighbours.size();
+        for(const Boid<Distribution2, Dimension> & neighbour : neighbours) {
+            alignement += multiplier * neighbour.m_velocity;
         }
+        m_force += alignement;
     }
 
     /**
      * Computes the force of cohesion applied on the boid, then updates the boid's force parameter.
      * @param neighbours list of the boids that are close enough to the agent to apply the force.
      */
-    void cohesion_update(const std::vector<Boid> & neighbours) {
-        if(neighbours.size() != 0){
+    template <typename Distribution2>
+    void cohesion_update(const std::vector<Boid<Distribution2, Dimension>> & neighbours) {
+        if(! neighbours.empty()) {
             Position<Dimension> center = compute_center_of_mass(neighbours);
-            for(std::size_t j{0}; j < Dimension; ++j) {
-                m_force[j] += COHESION_NORMALISER*(center[j] - m_position[j]);
-            }
+            Distance<Dimension> direction = center - m_position;
+
+            m_force += COHESION_NORMALISER * direction;
         }
     }
 
@@ -85,14 +87,16 @@ public:
      * @todo For the moment the force is linear. We probably want to change it to inverse of the distance between the
      * two boids.
      */
-    void separation_update(const std::vector<Boid> & neighbours) {
-        for(auto const & neighbour : neighbours) {
-            if(is_visible(neighbour)) { //Shouldn't we only pass those as arguments in neighbours ?
-                for(std::size_t j{0}; j < Dimension; ++j) {
-                    m_force[j] += SEPARATION_NORMALISER*(m_position[j]-neighbour.m_position[j]);
-                }
+    template <typename Distribution2>
+    void separation_update(const std::vector<Boid<Distribution2, Dimension>> & neighbours) {
+        Force<Dimension> separation(0.0);
+        for(const Boid<Distribution2, Dimension> & neighbour : neighbours) {
+            const Distance<Dimension> to_neighbour = neighbour.m_position - m_position;
+            if(to_neighbour.norm() < REPULSION_DISTANCE) {
+                separation -= SEPARATION_NORMALISER * to_neighbour;
             }
         }
+        m_force += separation;
     }
 
     /**
@@ -103,39 +107,40 @@ public:
      * two boids.
      */
     void border_force_update(Position<Dimension> const & bottom_left, Position<Dimension> const & top_right){
-        for (int j=0; j<Dimension; j++) {
-            if(abs(m_position[j]-bottom_left[j]) <= SEPARATION_MIN_DISTANCE){
-                m_force[j] += BORDER_SEPARATION_NORMALISER/(m_position[j]-bottom_left[j]);
+        const Distance<Dimension> dist1 = m_position - bottom_left;
+        const Distance<Dimension> dist2 = m_position - top_right;
+
+        Force<Dimension> border_separation(0.0);// = BORDER_SEPARATION_NORMALISER * (1.0/(dist1) + 1.0/(dist2));
+
+        for(std::size_t i{0}; i < Dimension; ++i) {
+            if(dist1[i] < BORDER_SEPARATION_MIN_DISTANCE) {
+                border_separation[i] += BORDER_SEPARATION_NORMALISER * 1.0/dist1[i];
             }
-            if (abs(m_position[j]-top_right[j])<= SEPARATION_MIN_DISTANCE){
-                m_force[j] += BORDER_SEPARATION_NORMALISER*(m_position[j]-top_right[j]);
+            if(dist2[i] < BORDER_SEPARATION_MIN_DISTANCE) {
+                border_separation[i] += BORDER_SEPARATION_NORMALISER * 1.0/dist2[i];
             }
         }
+        m_force += border_separation;
     }
 
     /**
      * Computes the center of mass of a number of boids
      * @param neighbours list of the boids whose center is to be computed
      */
-    Position<Dimension> compute_center_of_mass(const std::vector<Boid> & neighbours) {
-        if (neighbours.size() == 0){ // no neighbours are perceived : no influence must be had on our current boid
-            return Position<Dimension>(-1.0f);
+    template <typename Distribution2>
+    Position<Dimension> compute_center_of_mass(const std::vector<Boid<Distribution2, Dimension>> & neighbours) {
+        Position<Dimension> center(0.0);
+        for(const Boid<Distribution2, Dimension> & neighbour : neighbours) {
+            center += neighbour.m_position;
         }
-        Position<Dimension> center{};
-        for(auto const & neighbour : neighbours) {
-            for (int j=0; j<Dimension; j++) {
-                center[j] += neighbour.m_position[j]/neighbours.size();
-                //std::cout << center[j] << "////" << neighbour.m_position[j] << "/////" << neighbours.size() << std::endl;
-            }
-        }
-        return center;
+        return center / neighbours.size();
     }
 
     /**
-     * updates all forces at once
-     * @param neighbours list of the boids who influence the current agent
-     * @param bottom_left     bottom-left corner of the space we want to simulate.
-     * @param top_right       top-right corner of the space we want to simulate.
+     * Updates all forces at once
+     * @param neighbours  list of the boids who influence the current agent
+     * @param bottom_left bottom-left corner of the space we want to simulate.
+     * @param top_right   top-right corner of the space we want to simulate.
      */
     void update_forces(const std::vector<Boid> & neighbours, Position<Dimension> const & bottom_left, Position<Dimension> const & top_right) {
         for (int j=0; j<Dimension; j++) {
@@ -144,6 +149,7 @@ public:
         cohesion_update(neighbours);
         separation_update(neighbours);
         border_force_update(bottom_left, top_right);
+        alignment_update(neighbours);
     }
 
     /**
@@ -151,16 +157,11 @@ public:
      * @param neighbours list of the boids who influence the current agent
      */
     void update_velocity(const std::vector<Boid> & neighbours) {
-        alignment_update(neighbours);
-        float velocity_norm_squared = 0.0;
-        for (int j=0; j<Dimension; j++) {
-            m_velocity[j] += m_force[j]*TIMESTEP;
-            velocity_norm_squared += m_velocity[j]*m_velocity[j];
-        }
-        if (velocity_norm_squared > MAX_SPEED*MAX_SPEED) {
-            for (int j=0; j<Dimension; j++) {
-                m_velocity[j] *= MAX_SPEED/pow(velocity_norm_squared, 0.5);
-            }
+        m_velocity += TIMESTEP * m_force;
+        const auto velocity_norm = m_velocity.norm();
+
+        if (velocity_norm > MAX_SPEED) {
+            m_velocity *= MAX_SPEED / velocity_norm;
         }
     }
 
@@ -169,15 +170,16 @@ public:
      * @param neighbours list of the boids who influence the current agent
      */
     void update_position(Position<Dimension> const & bottom_left, Position<Dimension> const & top_right) {
-        for (int j=0; j<Dimension; j++) {
-            m_position[j] += m_velocity[j]*TIMESTEP;
-            if (m_position[j] >= top_right[j] - 0.1*BORDER_SEPARATION_MIN_DISTANCE){
-                m_position[j] = top_right[j] - 0.1*BORDER_SEPARATION_MIN_DISTANCE;
-            }
-            if (m_position[j] <= bottom_left[j] + 0.1*BORDER_SEPARATION_MIN_DISTANCE){
-                m_position[j] = bottom_left[j] + 0.1*BORDER_SEPARATION_MIN_DISTANCE;
-            }
-        }
+        m_position += TIMESTEP * m_velocity;
+//        for (int j=0; j<Dimension; j++) {
+//            m_position[j] += m_velocity[j]*TIMESTEP;
+//            if (m_position[j] >= top_right[j] - 0.1*BORDER_SEPARATION_MIN_DISTANCE){
+//                m_position[j] = top_right[j] - 0.1*BORDER_SEPARATION_MIN_DISTANCE;
+//            }
+//            if (m_position[j] <= bottom_left[j] + 0.1*BORDER_SEPARATION_MIN_DISTANCE){
+//                m_position[j] = bottom_left[j] + 0.1*BORDER_SEPARATION_MIN_DISTANCE;
+//            }
+//        }
     }
 
 //private:
@@ -194,6 +196,7 @@ public:
         if (squared_distance <= VISION_DISTANCE*VISION_DISTANCE) {
             return compute_angle(boid) < VISION_ANGLE;
         }
+        return false;
     }
 
     /**
