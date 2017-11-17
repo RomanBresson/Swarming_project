@@ -8,6 +8,7 @@
 #include <initializer_list>
 #include <utility>
 
+
 /**
  * An overload of std::array that implements usefull mathematical operations.
  * @tparam T type of the stored elements.
@@ -55,9 +56,252 @@ public:
         return std::pow(norm, 1.0/p);
     }
 
+    /**
+     * Soustraction logic for the MathArray class.
+     * @tparam T2   type of the stored elements of the array to substract.
+     * @param array the array to substract.
+     * @return      the updated current instance.
+     */
+    template <typename T2>
+    MathArray<T, S> operator-=(const MathArray<T2, S> & array) {
+        for(std::size_t i{0}; i < S; ++i) {
+            (*this)[i] -= array[i];
+        }
+        return *this;
+    };
+
+    /**
+     * Soustraction logic for the MathArray class.
+     * @tparam T2   type of the stored elements of the array to substract.
+     * @param array the array to substract.
+     * @return      the updated current instance.
+     */
+    template <typename T2>
+    MathArray<T, S> operator-=(const T2 & element) {
+        for(std::size_t i{0}; i < S; ++i) {
+            (*this)[i] -= element;
+        }
+        return *this;
+    };
+
+
+    /**
+     * Addition logic for the MathArray class.
+     * @tparam T2   type of the stored elements of the array to add.
+     * @param array the array to add.
+     * @return      the updated current instance.
+     */
+    template <typename T2>
+    MathArray<T, S> operator+=(const MathArray<T2, S> & array) {
+        for(std::size_t i{0}; i < S; ++i) {
+            (*this)[i] += array[i];
+        }
+        return *this;
+    };
+
+    /**
+     * Addition logic for the MathArray class.
+     * @tparam T2   type of the stored elements of the array to add.
+     * @param array the array to add.
+     * @return      the updated current instance.
+     */
+    template <typename T2>
+    MathArray<T, S> operator+=(const T2 & element) {
+        for(std::size_t i{0}; i < S; ++i) {
+            (*this)[i] += element;
+        }
+        return *this;
+    };
+
+    /**
+     * Multiplication logic for the MathArray class.
+     * @tparam T2   type of the stored elements of the array to multiply.
+     * @param array the array to multiply.
+     * @return      the updated current instance.
+     */
+    template <typename T2>
+    MathArray<T, S> operator*=(const MathArray<T2, S> & array) {
+        for(std::size_t i{0}; i < S; ++i) {
+            (*this)[i] *= array[i];
+        }
+        return *this;
+    };
+
+    /**
+     * Multiplication logic for the MathArray class.
+     * @tparam T2   type of the stored elements of the array to multiply.
+     * @param array the array to multiply.
+     * @return      the updated current instance.
+     */
+    template <typename T2>
+    MathArray<T, S> operator*=(const T2 & element) {
+        for(std::size_t i{0}; i < S; ++i) {
+            (*this)[i] *= element;
+        }
+        return *this;
+    };
+
+
+    /**
+     * Division logic for the MathArray class.
+     * @tparam T2   type of the stored elements of the array to divide.
+     * @param array the array to divide.
+     * @return      the updated current instance.
+     */
+    template <typename T2>
+    MathArray<T, S> operator/=(const MathArray<T2, S> & array) {
+        for(std::size_t i{0}; i < S; ++i) {
+            (*this)[i] /= array[i];
+        }
+        return *this;
+    };
+
+    /**
+     * Division logic for the MathArray class.
+     * @tparam T2   type of the stored elements of the array to division.
+     * @param array the array to division.
+     * @return      the updated current instance.
+     */
+    template <typename T2>
+    MathArray<T, S> operator/=(const T2 & element) {
+        for(std::size_t i{0}; i < S; ++i) {
+            (*this)[i] /= element;
+        }
+        return *this;
+    };
 };
 
 
+//#include "MathArrayOperators.tpp"
+
+
+/*
+ * Addition
+ */
+template <typename T, typename U, std::size_t S>
+MathArray<T,S> operator+(const MathArray<T,S> & lhs, const MathArray<U,S> & rhs) {
+    MathArray<T,S> copy(lhs);
+    copy += rhs;
+    return copy;
+};
+
+template <typename T, typename U, std::size_t S>
+MathArray<T,S> operator+(MathArray<T,S> && lhs, MathArray<U,S> && rhs) {
+    MathArray<T,S> copy(std::forward<MathArray<T,S>>(lhs));
+    copy += rhs;
+    return copy;
+};
+
+template <typename T, typename U, std::size_t S>
+MathArray<T,S> operator+(const MathArray<T,S> & lhs, const U & rhs) {
+    MathArray<T,S> copy(lhs);
+    copy += rhs;
+    return copy;
+};
+
+template <typename T, typename U, std::size_t S>
+MathArray<U,S> operator+(T lhs, const MathArray<U,S> & rhs) {
+    MathArray<U,S> copy(rhs);
+    copy += lhs;
+    return copy;
+};
+
+
+/*
+ * Substraction
+ */
+template <typename T, typename U, std::size_t S>
+MathArray<T,S> operator-(const MathArray<T,S> & lhs, const MathArray<U,S> & rhs) {
+    MathArray<T,S> copy(lhs);
+    copy -= rhs;
+    return copy;
+};
+
+template <typename T, typename U, std::size_t S>
+MathArray<T,S> operator-(MathArray<T,S> && lhs, MathArray<U,S> && rhs) {
+    MathArray<T,S> copy(std::forward<MathArray<T,S>>(lhs));
+    copy -= rhs;
+    return copy;
+};
+
+
+template <typename T, typename U, std::size_t S>
+MathArray<T,S> operator-(const MathArray<T,S> & lhs, const U & rhs) {
+    MathArray<T,S> copy(lhs);
+    copy -= rhs;
+    return copy;
+};
+
+template <typename T, typename U, std::size_t S>
+MathArray<U,S> operator-(T lhs, const MathArray<U,S> & rhs) {
+    MathArray<U,S> copy(rhs);
+    copy -= lhs;
+    return copy;
+};
+
+
+/*
+ * Multiplication
+ */
+template <typename T, typename U, std::size_t S>
+MathArray<T,S> operator*(const MathArray<T,S> & lhs, const MathArray<U,S> & rhs) {
+    MathArray<T,S> copy(lhs);
+    copy *= rhs;
+    return copy;
+};
+
+template <typename T, typename U, std::size_t S>
+MathArray<T,S> operator*(MathArray<T,S> && lhs, MathArray<U,S> && rhs) {
+    MathArray<T,S> copy(std::forward<MathArray<T,S>>(lhs));
+    copy *= rhs;
+    return copy;
+};
+
+template <typename T, typename U, std::size_t S>
+MathArray<T,S> operator*(const MathArray<T,S> & lhs, const U & rhs) {
+    MathArray<T,S> copy(lhs);
+    copy *= rhs;
+    return copy;
+};
+
+template <typename T, typename U, std::size_t S>
+MathArray<U,S> operator*(T lhs, const MathArray<U,S> & rhs) {
+    MathArray<U,S> copy(rhs);
+    copy *= lhs;
+    return copy;
+};
+
+
+/*
+ * Division
+ */
+template <typename T, typename U, std::size_t S>
+MathArray<T,S> operator/(const MathArray<T,S> & lhs, const MathArray<U,S> & rhs) {
+    MathArray<T,S> copy(lhs);
+    copy /= rhs;
+    return copy;
+};
+
+template <typename T, typename U, std::size_t S>
+MathArray<T,S> operator/(MathArray<T,S> && lhs, MathArray<U,S> && rhs) {
+    MathArray<T,S> copy(std::forward<MathArray<T,S>>(lhs));
+    copy /= rhs;
+    return copy;
+};
+
+template <typename T, typename U, std::size_t S>
+MathArray<T,S> operator/(const MathArray<T,S> & lhs, const U & rhs) {
+    MathArray<T,S> copy(lhs);
+    copy /= rhs;
+    return copy;
+};
+
+template <typename T, typename U, std::size_t S>
+MathArray<U,S> operator/(T lhs, const MathArray<U,S> & rhs) {
+    MathArray<U,S> copy(rhs);
+    copy /= lhs;
+    return copy;
+};
 
 
 
