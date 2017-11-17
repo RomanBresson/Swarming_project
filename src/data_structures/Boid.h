@@ -2,6 +2,7 @@
 #define SWARMING_PROJECT_BOIDS_H
 
 #include "definitions/types.h"
+#include "definitions/constants.h"
 #include <random>
 #include <string>
 #include <ostream>
@@ -10,25 +11,11 @@
 using types::PositionType;
 using types::Position;
 using types::Velocity;
+using types::Distance;
 using types::Force;
 using types::DistanceType;
 
-
-constexpr float PI = 3.14159265;
-constexpr float COHESION_NORMALISER = 0.01;
-constexpr float ALIGNMENT_NORMALISER = 0.125;
-constexpr float SEPARATION_NORMALISER = 1.0;
-constexpr float BORDER_SEPARATION_NORMALISER = 1.0;
-
-constexpr float VISION_DISTANCE = 3.0;
-constexpr float VISION_ANGLE = 90.0; //In degrees
-
-constexpr float SEPARATION_MIN_DISTANCE = 0.5;
-constexpr float BORDER_SEPARATION_MIN_DISTANCE = 1.0;
-
-constexpr float MAX_SPEED = 5.0;
-
-constexpr float TIMESTEP = 1.0;
+using namespace constants;
 
 /**
  * Struct that represents a boid agent.

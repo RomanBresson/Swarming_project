@@ -23,7 +23,7 @@ set(SOURCE_FILES
         # Visualization part
         src/visualization/GridVisualizer.h
         src/visualization/vtkTimerCallback.h
-        )
+        src/definitions/constants.h)
 
 add_executable(Swarming_project ${SOURCE_FILES})
 target_link_libraries(Swarming_project ${VTK_LIBRARIES})
