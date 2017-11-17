@@ -260,4 +260,14 @@ std::ostream & operator<<(std::ostream & os, const Boid<Distribution, Dimension>
               << "\tForce: " << boid.m_force << std::endl;
 }
 
+template <typename Distribution, std::size_t Dimension>
+bool operator!=(const Boid<Distribution, Dimension> & lhs, const Boid<Distribution, Dimension> & rhs) {
+    for(std::size_t i{0}; i < Dimension; ++i) {
+        if( std::abs(lhs.m_position[i] - rhs.m_position[i]) > constants::DOUBLE_EPSILON ) {
+            return false;
+        }
+    }
+    return true;
+};
+
 #endif //SWARMING_PROJECT_BOIDS_H
