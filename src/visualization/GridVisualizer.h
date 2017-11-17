@@ -8,6 +8,7 @@
 #include <vtkActor.h>
 #include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
+#include <vtkProperty.h>
 
 #include "definitions/types.h"
 #include "definitions/graphical_constants.h"
@@ -46,6 +47,7 @@ public:
               m_render_window(vtkSmartPointer<vtkRenderWindow>::New()),
               m_render_window_interactor(vtkSmartPointer<vtkRenderWindowInteractor>::New()) {
         initialize_boids();
+        m_renderer->SetBackground(gconst::BACKGROUND_COLOR);
         m_render_window->AddRenderer(m_renderer);
         m_render_window_interactor->SetRenderWindow(m_render_window);
 
@@ -106,7 +108,7 @@ private:
                 vtkSmartPointer<vtkRegularPolygonSource>::New();
         //circle->GeneratePolygonOff();
         circle->SetNumberOfSides(gconst::BOID_NUMBER_OF_SIDES);
-        circle->SetRadius(gconst::BOID_RADIUS);
+        circle->SetRadius(gconst::BOID_RADIUS_COEFFICIENT * m_grid.m_top_right[0]);
 
         // Create the mapper and the actor
         vtkSmartPointer<vtkPolyDataMapper> mapper =
@@ -117,6 +119,7 @@ private:
                 vtkSmartPointer<vtkActor>::New();
         actor->SetMapper(mapper);
         actor->SetPosition(buffer);
+        actor->GetProperty()->SetColor(gconst::BOID_COLOR);
 
         // Add the created actor to the renderer
         m_renderer->AddActor(actor);

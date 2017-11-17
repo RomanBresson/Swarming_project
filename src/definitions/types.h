@@ -18,6 +18,8 @@ namespace types {
     template <std::size_t Size> using Position = ArrayType<PositionType, Size>;
     template <std::size_t Size> using Velocity = ArrayType<VelocityType, Size>;
     template <std::size_t Size> using Force    = ArrayType<ForceType,    Size>;
+    template <std::size_t Size> using Distance = ArrayType<DistanceType, Size>;
+
 
 }
 
