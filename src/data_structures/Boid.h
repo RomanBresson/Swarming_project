@@ -113,10 +113,10 @@ public:
         Force<Dimension> border_separation(0.0);// = BORDER_SEPARATION_NORMALISER * (1.0/(dist1) + 1.0/(dist2));
 
         for(std::size_t i{0}; i < Dimension; ++i) {
-            if(dist1[i] < BORDER_SEPARATION_MIN_DISTANCE) {
+            if (std::abs(dist1[i]) < BORDER_SEPARATION_MIN_DISTANCE) {
                 border_separation[i] += BORDER_SEPARATION_NORMALISER * 1.0/dist1[i];
             }
-            if(dist2[i] < BORDER_SEPARATION_MIN_DISTANCE) {
+            if (std::abs(dist2[i]) < BORDER_SEPARATION_MIN_DISTANCE) {
                 border_separation[i] += BORDER_SEPARATION_NORMALISER * 1.0/dist2[i];
             }
         }
