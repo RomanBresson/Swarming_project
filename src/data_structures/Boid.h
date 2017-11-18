@@ -45,11 +45,16 @@ public:
         std::random_device d;
         std::default_random_engine generator(d());
         for(std::size_t i{0}; i < Dimension; ++i) {
-            Distribution distribution(bottom_left[i]+BORDER_SEPARATION_MIN_DISTANCE,
+            Distribution distribution_pos(bottom_left[i]+BORDER_SEPARATION_MIN_DISTANCE,
                                       top_right[i]-BORDER_SEPARATION_MIN_DISTANCE);
-            m_position[i] = distribution(generator);
-            m_velocity[i] = 0.0;
+            Distribution distribution_vel(-MAX_SPEED,MAX_SPEED);
+            m_position[i] = distribution_pos(generator);
+            m_velocity[i] = distribution_vel(generator);
             m_force[i]    = 0.0;
+        }
+        const float velocity_norm = m_velocity.norm();
+        if (velocity_norm > MAX_SPEED) {
+            m_velocity *= MAX_SPEED / velocity_norm;
         }
     }
 
