@@ -207,20 +207,22 @@ public:
      */
     template <typename D>
     float scalar_product(const Boid<D, Dimension> & boid) {
-        float scalar_product = 0.0;
-        float norm_self = 0.0;
-        float norm_boid = 0.0;
-        for (int j=0; j<Dimension; j++) {
-            scalar_product += m_velocity[j]*(boid.m_position[j]-m_position[j]);
-            norm_self += m_velocity[j]*m_velocity[j];
-            norm_boid += (boid.m_position[j]-m_position[j])*(boid.m_position[j]-m_position[j]);
+        const Distance<Dimension> current_to_other = boid.m_position - m_position;
+        const Distance<Dimension> piecewise_product = m_velocity * current_to_other;
+        const auto norm_self = m_velocity.norm();
+        const auto norm_other = current_to_other.norm();
+        float scalar_product{0.0};
+        for (std::size_t j{0}; j < Dimension; ++j) {
+            scalar_product += piecewise_product[j];
         }
+
         if (norm_self != 0.0) {
-            scalar_product/=norm_self;
+            scalar_product /= norm_self;
         }
-        if (norm_boid != 0.0) {
-            scalar_product/=norm_boid;
+        if (norm_other != 0.0) {
+            scalar_product /= norm_other;
         }
+
         return scalar_product;
     }
 
@@ -232,7 +234,7 @@ public:
      */
     template <typename D>
     float compute_angle(const Boid<D, Dimension> & boid) {
-        return acos(scalar_product(boid))*180.0/PI;
+        return static_cast<float>(std::acos(scalar_product(boid)) * 180.0 / (PI));
     }
 
     /**
