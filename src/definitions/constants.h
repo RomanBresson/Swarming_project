@@ -11,7 +11,7 @@ namespace constants {
     constexpr const float SEPARATION_NORMALISER = 0.1;
     constexpr const float BORDER_SEPARATION_NORMALISER = 1.0;
 
-    constexpr const float VISION_DISTANCE = 0.0;
+    constexpr const float VISION_DISTANCE = 5.0;
     constexpr const float VISION_ANGLE = 90.0; //In degrees
 
     constexpr const float SEPARATION_MIN_DISTANCE = 1;
