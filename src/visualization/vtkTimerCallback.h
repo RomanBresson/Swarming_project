@@ -7,6 +7,7 @@
 #include <vtkRenderer.h>
 #include <vtkActorCollection.h>
 
+#include <vector>
 #include <iostream>
 
 #include "data_structures/Grid.h"
@@ -26,12 +27,15 @@ public:
      *
      * Create a new instance of vtkTimerCallback.
      *
-     * @param grid     represent the space we want to simulate and visualize.
-     * @param renderer internal VTK structure used to render the image.
-     * @return         a pointer over the newly-created vtkTimerCallback instance.
+     * @param grid         represent the space we want to simulate and visualize.
+     * @param renderer     internal VTK structure used to render the image.
+     * @param boids_actors array of the actors that represent the boids.
+     * @return             a pointer over the newly-created vtkTimerCallback instance.
      */
-    static vtkTimerCallback *New(Grid<Distribution, Dimension> & grid, vtkSmartPointer<vtkRenderer> renderer) {
-        return new vtkTimerCallback<Distribution, Dimension>(grid, renderer);
+    static vtkTimerCallback *New(Grid<Distribution, Dimension> &grid,
+                                 vtkSmartPointer<vtkRenderer> renderer,
+                                 std::vector<vtkSmartPointer<vtkActor> > &boids_actors) {
+        return new vtkTimerCallback<Distribution, Dimension>(grid, renderer, boids_actors);
     }
 
     /**
@@ -54,36 +58,36 @@ private:
 
     /**
      * Construct an instance of vtkTimerCallback
-     * @param grid     represent the space we want to simulate and visualize.
-     * @param renderer internal VTK structure used to render the image.
+     * @param grid         represent the space we want to simulate and visualize.
+     * @param renderer     internal VTK structure used to render the image.
+     * @param boids_actors array of the actors that represent the boids.
      */
     explicit vtkTimerCallback(Grid<Distribution, Dimension> &grid,
-                              vtkSmartPointer<vtkRenderer> renderer)
+                              vtkSmartPointer<vtkRenderer> renderer,
+                              std::vector<vtkSmartPointer<vtkActor> > &boids_actors)
             : m_grid(grid),
-              m_renderer(renderer) {}
+              m_renderer(renderer),
+              m_boids_actors(boids_actors) {}
 
     /**
      * Update all the boids on the visualization.
      */
     void update_boids() {
-        double buffer[gconst::VTK_COORDINATES_NUMBER];
-
         m_grid.update_all_boids();
 
-        auto actors = m_renderer->GetActors();
-        actors->InitTraversal();
-
-        for(const auto & boid : m_grid.m_boids) {
+        for (std::size_t i{0}; i < m_grid.m_boids.size(); ++i) {
+            double boid_position[gconst::VTK_COORDINATES_NUMBER];
             // Cast the boid position as double to give it to VTK.
-            for(std::size_t i{0}; i < Dimension; ++i) {
-                buffer[i] = static_cast<double>(boid.m_position[i]);
+            for (std::size_t j{0}; j < Dimension; ++j) {
+                boid_position[j] = static_cast<double>(m_grid.m_boids[i].m_position[j]);
             }
-            actors->GetNextActor()->SetPosition(buffer);
+            m_boids_actors[i]->SetPosition(boid_position);
         }
     }
 
     Grid<Distribution, Dimension> & m_grid;
     vtkSmartPointer<vtkRenderer>    m_renderer;
+    std::vector<vtkSmartPointer<vtkActor> > &m_boids_actors;
 
 };
 

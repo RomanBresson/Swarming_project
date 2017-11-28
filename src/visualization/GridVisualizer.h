@@ -9,6 +9,11 @@
 #include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkProperty.h>
+#include <vtkLineSource.h>
+
+#include <array>
+#include <vector>
+#include <cmath>
 
 #include "definitions/types.h"
 #include "definitions/graphical_constants.h"
@@ -43,21 +48,23 @@ public:
      */
     explicit GridVisualizer(Grid<Distribution, Dimension> & grid)
             : m_grid(grid),
+              m_boids_actors(),
               m_renderer(vtkSmartPointer<vtkRenderer>::New()),
               m_render_window(vtkSmartPointer<vtkRenderWindow>::New()),
               m_render_window_interactor(vtkSmartPointer<vtkRenderWindowInteractor>::New()) {
+
+        initialize_mesh();
         initialize_boids();
+
         m_renderer->SetBackground(gconst::BACKGROUND_COLOR);
+
         m_render_window->AddRenderer(m_renderer);
+
         m_render_window_interactor->SetRenderWindow(m_render_window);
-
-        // Now register the time event for the updates.
         m_render_window_interactor->Initialize();
-
         // Sign up to receive TimerEvent
-        vtkSmartPointer<TimerCallback> callback = TimerCallback::New(m_grid, m_renderer);
+        vtkSmartPointer<TimerCallback> callback = TimerCallback::New(m_grid, m_renderer, m_boids_actors);
         m_render_window_interactor->AddObserver(vtkCommand::TimerEvent, callback);
-
         // Create the TimerEvent
         m_render_window_interactor->CreateRepeatingTimer(gconst::UPDATE_DELAY_MS);
     }
@@ -72,19 +79,74 @@ public:
         m_render_window_interactor->Start();
     }
 
+private:
+
+    void initialize_mesh() {
+
+        // If we can't represent 2^Dimension as an unsigned long long then abort compilation
+        static_assert(Dimension < sizeof(unsigned long long), "The chosen Dimension is too high.");
+
+        using point_type = std::array<bool, Dimension>;
+        std::array<point_type, (1ULL << Dimension)> points;
+
+        // For each possibility of {0,1}^Dimension (integer binary representation)
+        for (std::size_t i{0}; i < (1ULL << Dimension); ++i) {
+            // We transform the current integer representation as a point_type
+            point_type current_point;
+            for (std::size_t coordinate{0}; coordinate < Dimension; ++coordinate) {
+                // Is the bit n° coordinate set to 1 or not?
+                current_point[coordinate] = static_cast<bool>(i & (1LL << coordinate));
+            }
+            points[i] = current_point;
+        }
+
+        // Now points contains all the possibilities for {0,1}^Dimension
+        // We need to draw all the pairs of points that only have 1 different coordinate.
+        for (std::size_t i{0}; i < points.size(); ++i) {
+            for (std::size_t j{0}; j < points.size(); ++j) {
+                std::size_t number_of_differences{0};
+                for (std::size_t d{0}; d < Dimension; ++d) {
+                    number_of_differences += (points[i][d] != points[j][d]);
+                }
+
+                if (number_of_differences == 1) {
+                    // Then draw the line
+                    double point1[gconst::VTK_COORDINATES_NUMBER] = {0.0};
+                    double point2[gconst::VTK_COORDINATES_NUMBER] = {0.0};
+
+                    for (std::size_t d{0}; d < Dimension; ++d) {
+                        point1[d] = static_cast<double>(points[i][d] ? m_grid.m_bottom_left[d] : m_grid.m_top_right[d]);
+                        point2[d] = static_cast<double>(points[j][d] ? m_grid.m_bottom_left[d] : m_grid.m_top_right[d]);
+                    }
+
+                    vtkSmartPointer<vtkLineSource> line_source = vtkSmartPointer<vtkLineSource>::New();
+                    line_source->SetPoint1(point1);
+                    line_source->SetPoint2(point2);
+                    line_source->Update();
+
+                    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+                    mapper->SetInputConnection(line_source->GetOutputPort());
+                    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+                    actor->SetMapper(mapper);
+
+                    m_renderer->AddActor(actor);
+                }
+            }
+        }
+    }
+
+
+
     /**
      * Initialize the data structure for plotting the boids.
      */
     void initialize_boids() {
-        std::size_t i{0};
+        m_boids_actors.reserve(m_grid.m_boids.size());
         for(const auto & boid : m_grid.m_boids) {
             create_boid_for_rendering(boid);
-            ++i;
         }
-        std::cout << "Created " << i << " boids." << std::endl;
+        std::cout << "Created " << m_grid.m_boids.size() << " boids." << std::endl;
     }
-
-private:
 
     /**
      * Create all the data structures needed to visualize one boid.
@@ -123,10 +185,13 @@ private:
 
         // Add the created actor to the renderer
         m_renderer->AddActor(actor);
+        m_boids_actors.push_back(actor);
+
     }
 
     Grid<Distribution, Dimension> & m_grid;
 
+    std::vector<vtkSmartPointer<vtkActor> > m_boids_actors;
     vtkSmartPointer<vtkRenderer> m_renderer;
     vtkSmartPointer<vtkRenderWindow> m_render_window;
     vtkSmartPointer<vtkRenderWindowInteractor> m_render_window_interactor;
