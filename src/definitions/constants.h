@@ -21,7 +21,7 @@ namespace constants {
     constexpr const float MAX_SPEED = 1.0;
 
     constexpr const float TIMESTEP = 0.5;
-
+    constexpr const int   Dmax = 3;
 }
 
 #endif //SWARMING_PROJECT_CONSTANTS_H

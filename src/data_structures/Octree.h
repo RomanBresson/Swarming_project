@@ -43,6 +43,37 @@ public:
         return(morton_enc);
     }
 
+    bool is_child(Octree<Dimension> const & poss_father) const{
+        if (m_depth != poss_father.m_depth+1){
+            return false;
+        }
+        for (int i = 0; i<Dimension; i++){
+            if ((m_anchor[i] != poss_father.m_anchor[i]) && (m_anchor[i] != poss_father.m_anchor[i]+pow(2, Dmax-m_depth))){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    int is_descendant(Octree<Dimension> const & poss_ances) const{
+        if (m_depth <= poss_ances.m_depth){
+            return 0;
+        }
+        for (int i = 0; i<Dimension; i++){
+            if ((m_anchor[i] < poss_ances.m_anchor[i]) || (m_anchor[i] >= poss_ances.m_anchor[i]+pow(2, Dmax-poss_ances.m_depth))){
+                return 0;
+            }
+        }
+        return m_depth-poss_ances.m_depth;
+    }
+
+    bool is_father(Octree<Dimension> const & poss_son){
+        return poss_son.is_child(*this);
+    }
+
+    int is_ancestor(Octree<Dimension> const & poss_desc) const {
+        return poss_desc.is_descendant(*this);
+    }
 };
 
 #endif //SWARMING_PROJECT_OCTREE_H
