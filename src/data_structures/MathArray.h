@@ -8,7 +8,6 @@
 #include <initializer_list>
 #include <utility>
 
-
 /**
  * An overload of std::array that implements usefull mathematical operations.
  * @tparam T type of the stored elements.

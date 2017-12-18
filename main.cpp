@@ -16,40 +16,5 @@ int main() {
 
     visualizer.start();
 
-    /*
-    Grid< std::uniform_int_distribution<int>, DIMENSION > grid( bottom_left, top_right, NUMBER_OF_BOIDS );
-    for(int t = 0; t<1000; t++){
-        grid.update_all_boids();
-        std::cout << grid << std::endl;
-    }/*
-        for(int i=0; i<nb_of_boids; i++){
-            std::vector<Boid<std::uniform_int_distribution<int>, Dimension> > neighbours;
-            for(int j=0; j<nb_of_boids; j++){
-                if (i!=j){
-                    if (grid.m_boids[i].is_visible(grid.m_boids[j])){
-                        neighbours.push_back(grid.m_boids[j]);
-                    }
-                }
-            }
-            grid.m_boids[i].update_forces(neighbours, bottom_left, top_right);
-            grid.m_boids[i].update_velocity(neighbours);
-            grid.m_boids[i].update_position(bottom_left, top_right);
-            //Boid<std::uniform_real_distribution<float>, 3> bob(bottom_left, top_right);
-            //bob.update_forces(vec, bottom_left, top_right);
-            //bob.update_velocity(vec);
-            //std::cout << bob << std::endl;
-            //vec.push_back(bob);
-        }
-    }
-     */
-    /*
-    for(int j = 0; j<1000; j++){
-        for(int i=0; i<NUMBER_OF_BOIDS; i++){
-            vec[i].update_forces(vec, bottom_left, top_right);
-            vec[i].update_velocity(vec);
-            //std::cout << vec[i] << std::endl;
-        }
-        //std::cout << "-------------------------------" << std::endl;
-    }*/
     return 0;
 }
