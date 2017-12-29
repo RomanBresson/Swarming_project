@@ -39,6 +39,20 @@ public:
      * @param bottom_left     bottom-left corner of the space we want to simulate.
      * @param top_right       top-right corner of the space we want to simulate.
      */
+    Boid(Position<Dimension> const & pos,
+         Velocity<Dimension> const & vel,
+         Force   <Dimension> const & forc):
+         m_position(pos),
+         m_velocity(vel),
+         m_force(forc)
+    {
+    }
+
+    /**
+     * Constructor for the Boid class.
+     * @param bottom_left     bottom-left corner of the space we want to simulate.
+     * @param top_right       top-right corner of the space we want to simulate.
+     */
     Boid(Position<Dimension> const & bottom_left,
          Position<Dimension> const & top_right)
     {

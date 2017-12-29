@@ -3,6 +3,7 @@
 
 #include "definitions/types.h"
 #include "definitions/constants.h"
+#include "data_structures/Boid.h"
 #include <array>
 
 using types::Coordinate;
@@ -30,6 +31,15 @@ public:
     {
     }
 
+    Octree(Boid<std::uniform_real_distribution<float>, Dimension> const & boid)
+    : m_depth(constants::Dmax)
+    {
+        for (int i=0; i<Dimension; i++){
+            float case_size = GRID_SIZE/pow(2, constants::Dmax);
+            m_anchor[i] = (int)(boid.m_position[i]/case_size);
+        }
+    }
+
     int morton_index(){
         int morton_enc = m_depth & 0x1F;
         int k = 5;
@@ -48,7 +58,7 @@ public:
             return false;
         }
         for (int i = 0; i<Dimension; i++){
-            if ((m_anchor[i] != poss_father.m_anchor[i]) && (m_anchor[i] != poss_father.m_anchor[i]+pow(2, Dmax-m_depth))){
+            if ((m_anchor[i] != poss_father.m_anchor[i]) && (m_anchor[i] != poss_father.m_anchor[i]+pow(2, constants::Dmax-m_depth))){
                 return false;
             }
         }
@@ -60,7 +70,7 @@ public:
             return 0;
         }
         for (int i = 0; i<Dimension; i++){
-            if ((m_anchor[i] < poss_ances.m_anchor[i]) || (m_anchor[i] >= poss_ances.m_anchor[i]+pow(2, Dmax-poss_ances.m_depth))){
+            if ((m_anchor[i] < poss_ances.m_anchor[i]) || (m_anchor[i] >= poss_ances.m_anchor[i]+pow(2, constants::Dmax-poss_ances.m_depth))){
                 return 0;
             }
         }
