@@ -2,8 +2,8 @@
 LDFLAGS = -lm 
 
 # Compilation options
-CFLAGS = -I/usr/include/openmpi -O1
-CXXFLAGS = -I/usr/include/openmpi -O1
+CFLAGS = -I/usr/include/openmpi -O2
+CXXFLAGS = -I/usr/include/openmpi -O2
 
 CC  = gcc
 CXX = g++
