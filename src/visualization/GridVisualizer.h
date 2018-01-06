@@ -10,6 +10,7 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkProperty.h>
 #include <vtkLineSource.h>
+#include <vtkSphereSource.h>
 
 #include <array>
 #include <vector>
@@ -166,10 +167,7 @@ private:
         }
 
         // Create a circle
-        vtkSmartPointer<vtkRegularPolygonSource> circle =
-                vtkSmartPointer<vtkRegularPolygonSource>::New();
-        //circle->GeneratePolygonOff();
-        circle->SetNumberOfSides(gconst::BOID_NUMBER_OF_SIDES);
+        vtkSmartPointer<vtkSphereSource> circle = vtkSmartPointer<vtkSphereSource>::New();
         circle->SetRadius(gconst::BOID_RADIUS_COEFFICIENT * m_grid.m_top_right[0]);
 
         // Create the mapper and the actor
