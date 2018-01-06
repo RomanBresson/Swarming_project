@@ -31,7 +31,7 @@ public:
     {
     }
 
-    Octree(Boid<std::uniform_real_distribution<float>, Dimension> const & boid)
+    Octree(Boid<Dimension> const & boid)
     : m_depth(constants::Dmax)
     {
         for (int i=0; i<Dimension; i++){

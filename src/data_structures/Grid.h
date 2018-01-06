@@ -3,7 +3,7 @@
 
 #include "definitions/types.h"
 #include "data_structures/Boid.h"
-
+#include <random>
 #include <vector>
 #include <ostream>
 
@@ -33,17 +33,14 @@ public:
             : m_bottom_left(bottom_left),
               m_top_right(top_right)
     {
-        m_boids.reserve(number_of_boids);
-        for(std::size_t i{0}; i < number_of_boids; ++i) {
-            m_boids.emplace_back(bottom_left, top_right);
-        }
+        add_boids(number_of_boids);
     }
 
     /**
      * Add a unique randomly-distributed boid to the grid.
      */
-    void add_boid() {
-        m_boids.emplace_back(m_bottom_left, m_top_right);
+     void add_boid(Position<Dimension> pos, Velocity<Dimension> vel, Force<Dimension> force) {
+        m_boids.emplace_back(pos, vel, force);
     }
 
     /**
@@ -51,8 +48,27 @@ public:
      * @param number_of_boids_to_add The number of boids to add to the grid.
      */
     void add_boids(std::size_t number_of_boids_to_add) {
-        for(std::size_t i{0}; i < number_of_boids_to_add; ++i) {
-            this->add_boid();
+        m_boids.reserve(number_of_boids_to_add);
+        std::random_device d;
+        std::default_random_engine generator(d());
+        for(std::size_t j{0}; j < number_of_boids_to_add; ++j) {
+            Position<Dimension> pos;
+            Velocity<Dimension> vel;
+            Force<Dimension>  force;
+
+            for(std::size_t i{0}; i < Dimension; ++i) {
+                Distribution distribution_pos(m_bottom_left[i]+BORDER_SEPARATION_MIN_DISTANCE,
+                                              m_top_right[i]-BORDER_SEPARATION_MIN_DISTANCE);
+                Distribution distribution_vel(-MAX_SPEED,MAX_SPEED);
+                pos[i]   = distribution_pos(generator);
+                vel[i]   = distribution_vel(generator);
+                force[i] = 0.0;
+            }
+            const double velocity_norm = vel.norm();
+            if (velocity_norm > MAX_SPEED) {
+                vel *= MAX_SPEED / velocity_norm;
+            }
+            this->add_boid(pos, vel, force);
         }
     }
 
@@ -61,7 +77,7 @@ public:
      */
     void shuffle() {
         for(auto & boid : m_boids) {
-            boid = Boid<Distribution, Dimension>(m_bottom_left, m_top_right);
+            boid = Boid<Dimension>(m_bottom_left, m_top_right);
         }
     }
 
@@ -70,7 +86,7 @@ public:
      */
     void update_all_boids() {
         for(std::size_t i{0}; i < m_boids.size(); ++i) {
-            std::vector<Boid<Distribution, Dimension> > neighbours;
+            std::vector<Boid<Dimension> > neighbours;
             for(std::size_t j{0}; j < m_boids.size(); ++j){
                 if(i != j && m_boids[i].is_visible(m_boids[j])){
                     neighbours.push_back(m_boids[j]);
@@ -101,7 +117,7 @@ public:
     /**
      * All the boids contained in the space represented by this instance.
      */
-    std::vector< Boid<Distribution, Dimension> > m_boids;
+    std::vector< Boid<Dimension> > m_boids;
 
 };
 

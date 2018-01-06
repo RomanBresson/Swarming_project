@@ -157,7 +157,7 @@ private:
      *
      * @param boid boid we want to add to the visualization.
      */
-    void create_boid_for_rendering(const Boid<Distribution, Dimension> &boid) {
+    void create_boid_for_rendering(const Boid<Dimension> &boid) {
         double buffer[gconst::VTK_COORDINATES_NUMBER];
 
         // Compute the center of the circle
