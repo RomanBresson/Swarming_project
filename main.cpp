@@ -1,16 +1,27 @@
 #include <iostream>
 #include "data_structures/Octree.h"
+#include "mpi.h"
 #include "data_structures/Boid.h"
 #include "data_structures/Grid.h"
 #include "visualization/GridVisualizer.h"
 
-constexpr const std::size_t DIMENSION{3};
-constexpr const std::size_t NUMBER_OF_BOIDS{500};
 using types::Position;
 
-int main() {
-    Position<DIMENSION> bottom_left({0.0, 0.0, 0.0});
-    Position<DIMENSION> top_right({GRID_SIZE, GRID_SIZE, GRID_SIZE});
+int main(int argc, char *argv[]) {
+
+    // Initialise MPI.
+    MPI_Init(&argc, &argv);
+    int process_number, process_ID;
+    MPI_Comm_size(MPI_COMM_WORLD, &process_number);
+    MPI_Comm_rank(MPI_COMM_WORLD, &process_ID);
+
+    // Initialise the constants of the program.
+    constexpr const std::size_t DIMENSION{2};
+    constexpr const std::size_t NUMBER_OF_BOIDS{500};
+    Position<DIMENSION> bottom_left({0.0, 0.0});
+    Position<DIMENSION> top_right({100.0, 100.0});
+
+
     /*
     Position<DIMENSION> pos1({10.0,10.0,10.0});
     Position<DIMENSION> pos2({20.0,10.0,20.0});
@@ -28,10 +39,22 @@ int main() {
 
     cout << o1.m_anchor << " ; " << o2.m_anchor <<" ; "<<o3.m_anchor<<std::endl;*/
 
+    std::cout << "Creating the grid... " << std::flush;
     Grid<std::uniform_real_distribution<float>, DIMENSION> grid(bottom_left, top_right, NUMBER_OF_BOIDS);
-    GridVisualizer<std::uniform_real_distribution<float>, DIMENSION> visualizer(grid);
+    std::cout << "Done!" << std::endl;
 
-    visualizer.start();
+//    GridVisualizer<std::uniform_real_distribution<float>, DIMENSION> visualizer(grid);
+//
+//    visualizer.start();
+
+    for (std::size_t i{0}; i < 1000; ++i) {
+        std::cout << "Update n°" << i << "... " << std::flush;
+        grid.update_all_boids();
+        std::cout << "Done!" << std::endl;
+    }
+
+    MPI_Finalize();
 
     return 0;
+
 }
