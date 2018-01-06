@@ -66,7 +66,7 @@ public:
             m_velocity[i] = distribution_vel(generator);
             m_force[i]    = 0.0;
         }
-        const float velocity_norm = m_velocity.norm();
+        const double velocity_norm = m_velocity.norm();
         if (velocity_norm > MAX_SPEED) {
             m_velocity *= MAX_SPEED / velocity_norm;
         }
