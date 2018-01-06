@@ -18,8 +18,6 @@ int main(int argc, char *argv[]) {
     // Initialise the constants of the program.
     constexpr const std::size_t DIMENSION{2};
     constexpr const std::size_t NUMBER_OF_BOIDS{500};
-    Position<DIMENSION> bottom_left({0.0, 0.0});
-    Position<DIMENSION> top_right({100.0, 100.0});
 
 
     /*
@@ -40,12 +38,12 @@ int main(int argc, char *argv[]) {
     cout << o1.m_anchor << " ; " << o2.m_anchor <<" ; "<<o3.m_anchor<<std::endl;*/
 
     std::cout << "Creating the grid... " << std::flush;
-    Grid<std::uniform_real_distribution<float>, DIMENSION> grid(bottom_left, top_right, NUMBER_OF_BOIDS);
+    Grid<std::uniform_real_distribution<float>, DIMENSION> grid(NUMBER_OF_BOIDS);
     std::cout << "Done!" << std::endl;
 
-//    GridVisualizer<std::uniform_real_distribution<float>, DIMENSION> visualizer(grid);
-//
-//    visualizer.start();
+    GridVisualizer<std::uniform_real_distribution<float>, DIMENSION> visualizer(grid);
+
+    visualizer.start();
 
     for (std::size_t i{0}; i < 1000; ++i) {
         std::cout << "Update n°" << i << "... " << std::flush;

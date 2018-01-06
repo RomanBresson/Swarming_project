@@ -2,12 +2,14 @@
 #define SWARMING_PROJECT_GRID_H
 
 #include "definitions/types.h"
+#include "definitions/constants.h"
 #include "data_structures/Boid.h"
 #include <random>
 #include <vector>
 #include <ostream>
 
 using types::Position;
+using namespace constants;
 
 /**
  * Class that represents a physical space.
@@ -24,14 +26,9 @@ public:
 
     /**
      * Constructor for the Grid class.
-     * @param bottom_left     The bottom-left corner of the space we want to simulate.
-     * @param top_right       The top-right corner of the space we want to simulate.
      * @param number_of_boids The number of randomly-distributed boids initially in the grid.
      */
-    Grid(Position<Dimension> const & bottom_left, Position<Dimension> const & top_right,
-         std::size_t number_of_boids = 0)
-            : m_bottom_left(bottom_left),
-              m_top_right(top_right)
+    Grid(std::size_t number_of_boids = 0)
     {
         add_boids(number_of_boids);
     }
@@ -57,8 +54,8 @@ public:
             Force<Dimension>  force;
 
             for(std::size_t i{0}; i < Dimension; ++i) {
-                Distribution distribution_pos(m_bottom_left[i]+BORDER_SEPARATION_MIN_DISTANCE,
-                                              m_top_right[i]-BORDER_SEPARATION_MIN_DISTANCE);
+                Distribution distribution_pos(BORDER_SEPARATION_MIN_DISTANCE,
+                                              GRID_SIZE-BORDER_SEPARATION_MIN_DISTANCE);
                 Distribution distribution_vel(-MAX_SPEED,MAX_SPEED);
                 pos[i]   = distribution_pos(generator);
                 vel[i]   = distribution_vel(generator);
@@ -72,14 +69,14 @@ public:
         }
     }
 
-    /**
+    /** TODO : ADAPT TO NEW CONVENTIONS
      * Randomly re-create all the boids contained in the Grid.
      */
-    void shuffle() {
+/*    void shuffle() {
         for(auto & boid : m_boids) {
             boid = Boid<Dimension>(m_bottom_left, m_top_right);
         }
-    }
+    }*/
 
     /**
      * Computes forces, velocity and then position for all boids and updates them
@@ -92,27 +89,15 @@ public:
                     neighbours.push_back(m_boids[j]);
                 }
             }
-            m_boids[i].update_forces(neighbours, m_bottom_left, m_top_right);
+            m_boids[i].update_forces(neighbours);
             m_boids[i].update_velocity(neighbours);
         }
         for(auto & boid : m_boids) {
-            boid.update_position(m_bottom_left, m_top_right);
+            boid.update_position();
         }
     }
 
 //private:
-
-    /**
-     * The bottom-left corner of the space (i.e. the point of the space with the lowest
-     * coordinates).
-     */
-    Position<Dimension> m_bottom_left;
-
-    /**
-     * The top-right corner of the space (i.e. the point of the space with the highest
-     * coordinates).
-     */
-    Position<Dimension> m_top_right;
 
     /**
      * All the boids contained in the space represented by this instance.

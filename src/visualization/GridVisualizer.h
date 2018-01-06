@@ -21,6 +21,7 @@
 #include "data_structures/Grid.h"
 #include "data_structures/Boid.h"
 #include "visualization/vtkTimerCallback.h"
+#include "definitions/constants.h"
 
 using types::Position;
 
@@ -116,8 +117,8 @@ private:
                     double point2[gconst::VTK_COORDINATES_NUMBER] = {0.0};
 
                     for (std::size_t d{0}; d < Dimension; ++d) {
-                        point1[d] = static_cast<double>(points[i][d] ? m_grid.m_bottom_left[d] : m_grid.m_top_right[d]);
-                        point2[d] = static_cast<double>(points[j][d] ? m_grid.m_bottom_left[d] : m_grid.m_top_right[d]);
+                        point1[d] = static_cast<double>(points[i][d] ? std::size_t{0} : constants::GRID_SIZE);
+                        point2[d] = static_cast<double>(points[j][d] ? std::size_t{0} : constants::GRID_SIZE);
                     }
 
                     vtkSmartPointer<vtkLineSource> line_source = vtkSmartPointer<vtkLineSource>::New();
@@ -168,7 +169,7 @@ private:
 
         // Create a circle
         vtkSmartPointer<vtkSphereSource> circle = vtkSmartPointer<vtkSphereSource>::New();
-        circle->SetRadius(gconst::BOID_RADIUS_COEFFICIENT * m_grid.m_top_right[0]);
+        circle->SetRadius(gconst::BOID_RADIUS_COEFFICIENT * constants::GRID_SIZE);
 
         // Create the mapper and the actor
         vtkSmartPointer<vtkPolyDataMapper> mapper =

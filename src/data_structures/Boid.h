@@ -98,9 +98,13 @@ public:
      * @todo For the moment the force is linear. We probably want to change it to inverse of the distance between the
      * two boids.
      */
-    void border_force_update(Position<Dimension> const & bottom_left, Position<Dimension> const & top_right){
-        const Distance<Dimension> dist1 = m_position - bottom_left;
-        const Distance<Dimension> dist2 = m_position - top_right;
+    void border_force_update(){
+        const Distance<Dimension> dist1 = m_position;
+        Position<Dimension> top_left = m_position;
+        for(std::size_t i{0}; i < Dimension; ++i) {
+            top_left[i] -= (float)GRID_SIZE;
+        }
+        const Distance<Dimension> dist2 = top_left;
 
         Force<Dimension> border_separation(0.0);// = BORDER_SEPARATION_NORMALISER * (1.0/(dist1) + 1.0/(dist2));
 
@@ -133,13 +137,13 @@ public:
      * @param bottom_left bottom-left corner of the space we want to simulate.
      * @param top_right   top-right corner of the space we want to simulate.
      */
-    void update_forces(const std::vector<Boid> & neighbours, Position<Dimension> const & bottom_left, Position<Dimension> const & top_right) {
+    void update_forces(const std::vector<Boid> & neighbours) {
         for (int j=0; j<Dimension; j++) {
             m_force[j] = 0.0;
         }
         cohesion_update(neighbours);
         separation_update(neighbours);
-        border_force_update(bottom_left, top_right);
+        border_force_update();
         alignment_update(neighbours);
     }
 
@@ -160,7 +164,7 @@ public:
      * updates velocity from forces
      * @param neighbours list of the boids who influence the current agent
      */
-    void update_position(Position<Dimension> const & bottom_left, Position<Dimension> const & top_right) {
+    void update_position() {
         m_position += TIMESTEP * m_velocity;
 //        for (int j=0; j<Dimension; j++) {
 //            m_position[j] += m_velocity[j]*TIMESTEP;
