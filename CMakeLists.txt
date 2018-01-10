@@ -17,6 +17,7 @@ set(SOURCE_FILES
         src/data_structures/Boid.h
         src/data_structures/Grid.h
 		src/data_structures/Octree.h
+        src/data_structures/Linear_Octree.h
 		src/data_structures/MathArray.h
         # Definitions
         src/definitions/types.h
