@@ -4,7 +4,7 @@
 #include "definitions/types.h"
 #include "definitions/constants.h"
 #include "data_structures/Boid.h"
-#include <array>
+#include <vector>
 
 using types::Coordinate;
 
@@ -83,6 +83,39 @@ public:
 
     int is_ancestor(Octree<Dimension> const & poss_desc) const {
         return poss_desc.is_descendant(*this);
+    }
+
+    Octree<Dimension> get_father() const { //assertions on dimension ?
+        Coordinate<Dimension> anchor = m_anchor;
+        int case_size = pow(2, constants::Dmax-m_depth+1); //size of the father
+        for(int i = 0; i<Dimension; i++){
+            anchor[i] -= (anchor[i]%case_size);
+        }
+        Octree<Dimension> father(anchor, m_depth-1);
+        return father;
+    }
+
+    Octree<Dimension> get_closest_ancestor(Octree<Dimension> b) const{ //assertions on order ?
+        Octree<Dimension> curr_ances(m_anchor, m_depth);
+        while (! curr_ances.is_ancestor(b)) {
+            curr_ances = curr_ances.get_father();
+        }
+        return curr_ances;
+    }
+
+    std::vector<Octree<Dimension>> get_children() const{
+        std::vector<Octree<Dimension>> children;
+        for (int i = 0; i < pow(2, Dimension); i++) {
+            Octree<Dimension> child(m_anchor, m_depth + 1);
+            int currindex = i;
+            int case_size = pow(2, Dmax-m_depth-1);
+            for (int j = 0; j<Dimension; j++){
+                child.m_anchor[j] += currindex%2*case_size;
+                currindex/=2;
+            }
+            children.push_back(child);
+        }
+        return(children);
     }
 };
 
