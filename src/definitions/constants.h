@@ -17,7 +17,7 @@ namespace constants {
     constexpr const float SEPARATION_MIN_DISTANCE = 1;
     constexpr const float REPULSION_DISTANCE = 1.0;
     constexpr const float BORDER_SEPARATION_MIN_DISTANCE = 7.5;
-    constexpr const std::size_t GRID_SIZE{16};
+    constexpr const std::size_t GRID_SIZE{100};
 
     constexpr const float MAX_SPEED = 1.0;
 
