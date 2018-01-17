@@ -1,6 +1,8 @@
 #ifndef SWARMING_PROJECT_CONSTANTS_H
 #define SWARMING_PROJECT_CONSTANTS_H
 
+#define SWARMING_DO_ALL_CHECKS 1
+
 namespace constants {
 
     constexpr const double DOUBLE_EPSILON{1e-10};
