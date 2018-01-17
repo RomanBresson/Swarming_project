@@ -4,7 +4,7 @@
 #include "definitions/types.h"
 #include "definitions/constants.h"
 #include "data_structures/Boid.h"
-#include <vector>
+#include <queue>
 
 using types::Coordinate;
 
@@ -103,20 +103,38 @@ public:
         return curr_ances;
     }
 
-    std::vector<Octree<Dimension>> get_children() const{
-        std::vector<Octree<Dimension>> children;
-        for (int i = 0; i < pow(2, Dimension); i++) {
+    /**
+    * Returns the queue containing every children of the current octree.
+    */
+    std::queue<Octree<Dimension>> get_children() const{
+#ifdef SWARMING_DO_ALL_CHECKS
+        if (m_depth == Dmax){
+            std::cerr << "WARNING: Requesting children of a node at depth Dmax" << std::endl;
+        }
+#endif
+        std::queue<Octree<Dimension>> children;
+        for (int i = 0; i < (1 << Dimension); i++) {
             Octree<Dimension> child(m_anchor, m_depth + 1);
             int currindex = i;
-            int case_size = pow(2, Dmax-m_depth-1);
+            int case_size = (1 << (Dmax-m_depth-1));
             for (int j = 0; j<Dimension; j++){
-                child.m_anchor[j] += currindex%2*case_size;
-                currindex/=2;
+                child.m_anchor[j] += (currindex && 1)*case_size;
+                currindex >>= 1;
             }
-            children.push_back(child);
+            children.push(child);
         }
         return(children);
     }
+};
+
+template <std::size_t Dimension>
+bool operator<(const Octree<Dimension> & oct1, const Octree<Dimension> & oct2) {
+    return(oct1.morton_index() < oct2.morton_index());
+};
+
+template <std::size_t Dimension>
+bool operator>(const Octree<Dimension> & oct1, const Octree<Dimension> & oct2) {
+    return(oct1.morton_index() > oct2.morton_index());
 };
 
 #endif //SWARMING_PROJECT_OCTREE_H
