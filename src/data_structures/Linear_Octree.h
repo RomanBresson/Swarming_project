@@ -3,9 +3,10 @@
 
 #include "definitions/types.h"
 #include "definitions/constants.h"
-#include "data_structures/Boid.h"
 #include "data_structures/Octree.h"
+#include "data_structures/MathArray.h" //REMOVE AFTER TESTS
 #include <vector>
+#include <queue>
 #include <iterator>
 
 /**
@@ -26,6 +27,34 @@ public:
     Linear_Octree(std::vector<Octree<Dimension>> octants)
         : m_octants(octants)
     {
+    }
+
+    /**
+    * Constructor for the Linear Octree class (algorithm 3).
+    * @param a : first octant
+    * @param b : last octant
+    */
+    Linear_Octree(Octree<Dimension> a, Octree<Dimension> b)
+    {
+        int morton_a = a.morton_index();
+        int morton_b = b.morton_index();
+        std::cout << a.get_closest_ancestor(b).m_depth << " ----- " << a.get_closest_ancestor(b).m_anchor << std::endl;
+        std::queue<Octree<Dimension>> W = a.get_closest_ancestor(b).get_children(); //Check a<b
+        while (!W.empty()){
+            Octree<Dimension> w = W.front();
+            int morton_w = w.morton_index();
+            if((morton_w > morton_a) && (morton_w < morton_b) && (!w.is_ancestor(b))){
+                m_octants.push_back(w);
+            } else if (w.is_ancestor(a) || w.is_ancestor(b)) {
+                std::queue<Octree<Dimension>> children = w.get_children();
+                while(!children.empty()){
+                    Octree<Dimension> child = children.front();
+                    W.push(child);
+                    children.pop();
+                }
+            }
+            W.pop();
+        }
     }
 
     /**
