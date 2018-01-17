@@ -31,6 +31,10 @@ public:
     {
     }
 
+    /**
+    * Constructor for the Octree class.
+    * @param boid Boid that will spawn the octree at depth Dmax.
+    */
     Octree(Boid<Dimension> const & boid)
     : m_depth(constants::Dmax)
     {
@@ -40,7 +44,10 @@ public:
         }
     }
 
-    int morton_index(){
+    /**
+    * Creates the morton index.
+    */
+    int morton_index() const{
         int morton_enc = m_depth & 0x1F;
         int k = 5;
         for (int j=0; j<constants::Dmax; j++){
@@ -53,6 +60,10 @@ public:
         return(morton_enc);
     }
 
+    /**
+    * Returns true if current octree is a child of the argument octree, false otherwise.
+    * @param poss_father Possible father
+    */
     bool is_child(Octree<Dimension> const & poss_father) const{
         if (m_depth != poss_father.m_depth+1){
             return false;
@@ -65,6 +76,10 @@ public:
         return true;
     }
 
+    /**
+    * Returns true if current octree is a is a descendant of the argument octree, false otherwise.
+    * @param poss_ancestor Possible ancestor
+    */
     int is_descendant(Octree<Dimension> const & poss_ances) const{
         if (m_depth <= poss_ances.m_depth){
             return 0;
@@ -77,25 +92,50 @@ public:
         return m_depth-poss_ances.m_depth;
     }
 
+    /**
+    * Returns true if current octree is the father of the argument octree, false otherwise.
+    * @param poss_son Possible son
+    */
     bool is_father(Octree<Dimension> const & poss_son){
         return poss_son.is_child(*this);
     }
 
+    /**
+    * Returns true if current octree is an ancestor of the argument octree, false otherwise.
+    * @param poss_ancestor Possible descendant
+    */
     int is_ancestor(Octree<Dimension> const & poss_desc) const {
         return poss_desc.is_descendant(*this);
     }
 
-    Octree<Dimension> get_father() const { //assertions on dimension ?
+    /**
+    * Returns the father of the current octree.
+    */
+    Octree<Dimension> get_father() const {
+#ifdef SWARMING_DO_ALL_CHECKS
+        if (m_depth == 0){
+            std::cerr << "WARNING: requesting father of a node at depth 0" << std::endl;
+        }
+#endif
         Coordinate<Dimension> anchor = m_anchor;
-        int case_size = pow(2, constants::Dmax-m_depth+1); //size of the father
+        const int case_size_minus_1 = (1 << (constants::Dmax-m_depth+1)) - 1;
         for(int i = 0; i<Dimension; i++){
-            anchor[i] -= (anchor[i]%case_size);
+            anchor[i] -= (anchor[i] & case_size_minus_1);
         }
         Octree<Dimension> father(anchor, m_depth-1);
         return father;
     }
 
-    Octree<Dimension> get_closest_ancestor(Octree<Dimension> b) const{ //assertions on order ?
+    /**
+    * Returns the closest ancestor shared by the current octant and the argument octant.
+    * @param b Second Boid
+    */
+    Octree<Dimension> get_closest_ancestor(Octree<Dimension> b) const{
+#ifdef SWARMING_DO_ALL_CHECKS
+            if (*this > b){
+                std::cerr << "WARNING: bad octant order" << std::endl;
+            }
+#endif
         Octree<Dimension> curr_ances(m_anchor, m_depth);
         while (! curr_ances.is_ancestor(b)) {
             curr_ances = curr_ances.get_father();
