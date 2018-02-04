@@ -5,11 +5,13 @@
 #include "data_structures/MathArray.h"
 #include "data_structures/Grid.h"
 #include "visualization/GridVisualizer.h"
+#include "mpi.h"
 
 using types::Position;
 
 int main(int argc, char *argv[]) {
 
+    MPI_Init(&argc,  &argv);
     // Initialise the constants of the program.
     constexpr const std::size_t DIMENSION{3};
     constexpr const std::size_t NUMBER_OF_BOIDS{500};
@@ -62,7 +64,7 @@ int main(int argc, char *argv[]) {
 
     GridVisualizer<std::uniform_real_distribution<float>, DIMENSION> visualizer(grid);
     visualizer.start();
-
+	MPI_Finalize();
     return 0;
 
 }

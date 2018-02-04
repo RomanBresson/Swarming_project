@@ -53,7 +53,7 @@ public:
         for (int j=0; j<constants::Dmax; j++){
             for (int i=0; i<Dimension; i++){
                 int x = m_anchor[i]>>j;
-                morton_enc +=(x%2)*pow(2, k);
+                morton_enc +=(x&1)*(1<<k);
                 k++;
             }
         }
@@ -69,7 +69,7 @@ public:
             return false;
         }
         for (int i = 0; i<Dimension; i++){
-            if ((m_anchor[i] != poss_father.m_anchor[i]) && (m_anchor[i] != poss_father.m_anchor[i]+pow(2, constants::Dmax-m_depth))){
+            if ((m_anchor[i] != poss_father.m_anchor[i]) && (m_anchor[i] != poss_father.m_anchor[i]+(1<<(constants::Dmax-m_depth)))){
                 return false;
             }
         }
@@ -85,7 +85,7 @@ public:
             return 0;
         }
         for (int i = 0; i<Dimension; i++){
-            if ((m_anchor[i] < poss_ances.m_anchor[i]) || (m_anchor[i] >= poss_ances.m_anchor[i]+pow(2, constants::Dmax-poss_ances.m_depth))){
+            if ((m_anchor[i] < poss_ances.m_anchor[i]) || (m_anchor[i] >= poss_ances.m_anchor[i]+(1<<(constants::Dmax-poss_ances.m_depth)))){
                 return 0;
             }
         }
