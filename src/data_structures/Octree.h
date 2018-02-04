@@ -165,6 +165,21 @@ public:
         }
         return(children);
     }
+
+    std::queue<Octree<Dimension>> get_dfd() const{
+        Octree<Dimension> dfd(m_anchor, constants::Dmax);
+        return(dfd);
+    }
+
+    std::queue<Octree<Dimension>> get_dld() const{
+        Coordinate<Dimension> anchor;
+        for (int k=0; k<Dimension; k++){
+            anchor[k] = (1<<(constants::Dmax-1));
+        }
+        Octree<Dimension> dld(m_anchor, constants::Dmax);
+        return(dld);
+    }
+
 };
 
 template <std::size_t Dimension>
