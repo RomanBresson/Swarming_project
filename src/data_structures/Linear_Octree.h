@@ -26,7 +26,7 @@ public:
     * Constructor for the Linear Octree class.
     * @param l list of octrees to initialize
     */
-    Linear_Octree(std::vector<Octree<Dimension>> octants)
+    explicit Linear_Octree(std::vector<Octree<Dimension>> octants)
         : m_octants(octants)
     {
     }
@@ -38,22 +38,31 @@ public:
     */
     Linear_Octree(Octree<Dimension> a, Octree<Dimension> b)
     {
-        int morton_a = a.morton_index();
-        int morton_b = b.morton_index();
-        std::queue<Octree<Dimension>> W = a.get_closest_ancestor(b).get_children(); //Check a<b
+        std::size_t morton_a = a.morton_index();
+        std::size_t morton_b = b.morton_index();
+        std::cout << a.get_closest_ancestor(b).m_depth << " ----- " << a.get_closest_ancestor(b).m_anchor << std::endl;
+
+        // Creating the queue that will store the octants left to process.
+        // Initially, we need to process all the children of a.get_closest_ancestor(b)
+        std::queue<Octree<Dimension>> W;
+        for(const auto & child : a.get_closest_ancestor(b).get_children())
+            W.push(child);
+
+        // And we loop while there is an octant to process
         while (!W.empty()){
-            Octree<Dimension> w = W.front();
-            int morton_w = w.morton_index();
-            if((morton_w > morton_a) && (morton_w < morton_b) && (!w.is_ancestor(b))){
+            Octree<Dimension> const & w = W.front();
+            std::size_t morton_w = w.morton_index();
+
+            // If the current octant is between a and b
+            if((morton_w > morton_a) && (morton_w < morton_b) && (!w.is_ancestor(b)))
                 m_octants.push_back(w);
-            } else if (w.is_ancestor(a) || w.is_ancestor(b)) {
-                std::queue<Octree<Dimension>> children = w.get_children();
-                while(!children.empty()){
-                    Octree<Dimension> child = children.front();
+            // Else if it's an ancestor of a or b
+            else if (w.is_ancestor(a) || w.is_ancestor(b)) {
+                std::vector<Octree<Dimension>> children = w.get_children();
+                for(const auto & child : w.get_children())
                     W.push(child);
-                    children.pop();
-                }
             }
+
             W.pop();
         }
     }

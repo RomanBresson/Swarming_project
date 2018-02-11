@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
 
     MPI_Init(&argc,  &argv);
     // Initialise the constants of the program.
-    constexpr const std::size_t DIMENSION{3};
+    constexpr const std::size_t DIMENSION{2};
     constexpr const std::size_t NUMBER_OF_BOIDS{500};
 
 /*    Position<DIMENSION> pos1({50.0,0.0,0.0});

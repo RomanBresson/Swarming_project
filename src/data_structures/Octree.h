@@ -17,7 +17,7 @@ template <std::size_t Dimension>
 class Octree {
 
 public:
-    int m_depth;
+    std::size_t m_depth;
     Coordinate<Dimension> m_anchor;
 
     /**
@@ -25,36 +25,37 @@ public:
     * @param depth  Depth of the octree, MUST BE STRICTLY INFERIOR TO DMAX.
     * @param anchor The number of randomly-distributed boids initially in the grid.
     */
-    Octree(Coordinate<Dimension> const & anchor, int const & depth)
-        : m_anchor(anchor),
-        m_depth(depth)
+    Octree(Coordinate<Dimension> const & anchor, std::size_t const & depth)
+            : m_anchor(anchor),
+              m_depth(depth)
     {
+
     }
 
     /**
     * Constructor for the Octree class.
     * @param boid Boid that will spawn the octree at depth Dmax.
     */
-    Octree(Boid<Dimension> const & boid)
-    : m_depth(constants::Dmax)
+    explicit Octree(Boid<Dimension> const & boid)
+            : m_depth(constants::Dmax)
     {
-        for (int i=0; i<Dimension; i++){
-            float case_size = GRID_SIZE/pow(2, constants::Dmax);
-            m_anchor[i] = (int)(boid.m_position[i]/case_size);
+        //m_anchor = boid.m_position / (static_cast<double>(GRID_SIZE) / (1 << constants::Dmax));
+        for (std::size_t i{0}; i < Dimension; ++i) {
+            double case_size = static_cast<double>(GRID_SIZE) / (1 << constants::Dmax);
+            m_anchor[i] = static_cast<int>(boid.m_position[i] / case_size);
         }
     }
 
     /**
     * Creates the morton index.
     */
-    int morton_index() const{
-        int morton_enc = m_depth & 0x1F;
-        int k = 5;
-        for (int j=0; j<constants::Dmax; j++){
-            for (int i=0; i<Dimension; i++){
-                int x = m_anchor[i]>>j;
-                morton_enc +=(x&1)*(1<<k);
-                k++;
+    std::size_t morton_index() const{
+        std::size_t morton_enc = m_depth & 0x1F;
+        std::size_t bit_position{5};
+        for (std::size_t dimension_bit_position{0}; dimension_bit_position < constants::Dmax; ++dimension_bit_position){
+            for (std::size_t dimension{0}; dimension < Dimension; ++dimension){
+                morton_enc += ( (m_anchor[dimension]>>dimension_bit_position) & 1) << bit_position;
+                bit_position++;
             }
         }
         return(morton_enc);
@@ -89,7 +90,7 @@ public:
                 return 0;
             }
         }
-        return m_depth-poss_ances.m_depth;
+        return static_cast<int>(m_depth) - static_cast<int>(poss_ances.m_depth);
     }
 
     /**
@@ -132,9 +133,9 @@ public:
     */
     Octree<Dimension> get_closest_ancestor(Octree<Dimension> b) const{
 #ifdef SWARMING_DO_ALL_CHECKS
-            if (*this > b){
-                std::cerr << "WARNING: bad octant order" << std::endl;
-            }
+        if (*this > b){
+            std::cerr << "WARNING: bad octant order" << std::endl;
+        }
 #endif
         Octree<Dimension> curr_ances(m_anchor, m_depth);
         while (! curr_ances.is_ancestor(b)) {
@@ -146,22 +147,23 @@ public:
     /**
     * Returns the queue containing every children of the current octree.
     */
-    std::queue<Octree<Dimension>> get_children() const{
+    std::vector<Octree<Dimension>> get_children() const{
 #ifdef SWARMING_DO_ALL_CHECKS
         if (m_depth == Dmax){
             std::cerr << "WARNING: Requesting children of a node at depth Dmax" << std::endl;
         }
 #endif
-        std::queue<Octree<Dimension>> children;
-        for (int i = 0; i < (1 << Dimension); i++) {
+        std::vector<Octree<Dimension>> children;
+        children.reserve(1ULL << Dimension);
+
+        for (std::size_t i{0}; i < (1ULL << Dimension); ++i) {
             Octree<Dimension> child(m_anchor, m_depth + 1);
-            int currindex = i;
-            int case_size = (1 << (Dmax-m_depth-1));
-            for (int j = 0; j<Dimension; j++){
-                child.m_anchor[j] += (currindex & 1)*case_size;
-                currindex >>= 1;
+
+            std::size_t case_size = (1ULL << (Dmax-m_depth-1));
+            for (std::size_t j{0}; j < Dimension; ++j){
+                child.m_anchor[j] += ((i >> j) & 1)*case_size;
             }
-            children.push(child);
+            children.push_back(child);
         }
         return(children);
     }
@@ -179,6 +181,10 @@ public:
         }
         Octree<Dimension> dld(anchor, constants::Dmax);
         return(dld);
+    }
+
+    std::vector<Octree<Dimension>> get_siblings() const {
+        return this->get_father().get_children();
     }
 
 };

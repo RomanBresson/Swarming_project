@@ -20,7 +20,7 @@ namespace types {
     template <std::size_t Size> using Force    = ArrayType<ForceType,    Size>;
     template <std::size_t Size> using Distance = ArrayType<DistanceType, Size>;
 
-    using CoordinateType = int;
+    using CoordinateType = std::size_t;
     template <std::size_t Size> using Coordinate = ArrayType<CoordinateType, Size>;
 }
 
