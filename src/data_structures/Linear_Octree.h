@@ -93,9 +93,8 @@ public:
                 .get_children().front());
         }
         else if (process_ID == process_number-1){
-            partial_list.push_back(
-                root.get_dld()
-                .get_closest_ancestor(partial_list.back())
+            partial_list.push_back(partial_list.back()
+                .get_closest_ancestor(root.get_dld())
                 .get_children().back());
         }
 
@@ -104,7 +103,7 @@ public:
             std::array<int, Dimension+1> octree_msg;
             octree_msg[0] = partial_list.front().m_depth;
             std::copy(partial_list.front().m_anchor.begin(), partial_list.front().m_anchor.end(), std::next(octree_msg.begin()));
-            MPI_Isend(octree_msg.data(), octree_msg.size(), MPI_INT, process_ID-1, 0, MPI_COMM_WORLD, &ignored_request);
+            MPI_Isend(octree_msg.data(), octree_msg.size(), MPI_INT, process_ID-1, 0, MPI_COMM_WORLD, & ignored_request);
         }
 
         if (process_ID < process_number-1){
