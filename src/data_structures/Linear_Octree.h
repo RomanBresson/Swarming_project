@@ -40,7 +40,6 @@ public:
     {
         std::size_t morton_a = a.morton_index();
         std::size_t morton_b = b.morton_index();
-        std::cout << a.get_closest_ancestor(b).m_depth << " ----- " << a.get_closest_ancestor(b).m_anchor << std::endl;
 
         // Creating the queue that will store the octants left to process.
         // Initially, we need to process all the children of a.get_closest_ancestor(b)
