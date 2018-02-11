@@ -158,7 +158,7 @@ public:
             int currindex = i;
             int case_size = (1 << (Dmax-m_depth-1));
             for (int j = 0; j<Dimension; j++){
-                child.m_anchor[j] += (currindex && 1)*case_size;
+                child.m_anchor[j] += (currindex & 1)*case_size;
                 currindex >>= 1;
             }
             children.push(child);
@@ -166,17 +166,18 @@ public:
         return(children);
     }
 
-    std::queue<Octree<Dimension>> get_dfd() const{
+    Octree<Dimension> get_dfd() const{
         Octree<Dimension> dfd(m_anchor, constants::Dmax);
         return(dfd);
     }
 
-    std::queue<Octree<Dimension>> get_dld() const{
-        Coordinate<Dimension> anchor;
+    Octree<Dimension> get_dld() const{
+        Coordinate<Dimension> anchor = m_anchor;
+        int case_size = (1<<(constants::Dmax-m_depth));
         for (int k=0; k<Dimension; k++){
-            anchor[k] = (1<<(constants::Dmax-1));
+            anchor[k] += case_size - 1;
         }
-        Octree<Dimension> dld(m_anchor, constants::Dmax);
+        Octree<Dimension> dld(anchor, constants::Dmax);
         return(dld);
     }
 
