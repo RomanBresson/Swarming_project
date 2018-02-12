@@ -168,10 +168,25 @@ public:
         }
         return *this;
     };
+
 };
 
 
 //#include "MathArrayOperators.tpp"
+
+
+template <typename T1, typename T2, std::size_t S>
+bool operator==(const MathArray<T1, S> & lhs, const MathArray<T2, S> & rhs) {
+    for(std::size_t i{0}; i < S; ++i) {
+        if(lhs[i] != rhs[i]) return false;
+    }
+    return true;
+};
+
+template <typename T1, typename T2, std::size_t S>
+bool operator!=(const MathArray<T1, S> & lhs, const MathArray<T2, S> & rhs) {
+    return !( lhs == rhs );
+};
 
 
 /*
