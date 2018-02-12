@@ -188,7 +188,7 @@ static void distributed_sort(std::vector<T> & array, int process_number, int pro
     Timer timer(process_ID);
 
     // Select the splitters.
-    std::vector<T> selected_splitters = select_splitters(array, process_ID, process_number);
+    std::vector<T> selected_splitters = select_splitters(array, process_ID, process_number, comp);
     
     // For the following code, it is easier to add a last splitter that will be +infinity (or a value bigger than every
     // other value possible in the array
@@ -231,7 +231,7 @@ static void distributed_sort(std::vector<T> & array, int process_number, int pro
 
     // Finally, the received data is sorted so we can merge it efficiently.
     timer.tic("merging received data");
-    array = merge_sorted_arrays_sequential(final_data);
+    array = merge_sorted_arrays_sequential(final_data, comp);
     timer.toc();
 }
 
