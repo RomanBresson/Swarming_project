@@ -1,4 +1,3 @@
-#include "mpi.h"
 #include <iostream>
 #include <random>
 #include <algorithm>
@@ -14,6 +13,8 @@
 #include <numeric>
 #include <iterator>
 #include <list>
+
+#include "mpi.h"
 
 class Timer {
 
@@ -72,8 +73,8 @@ static std::vector<T> select_evenly_spaced(std::vector<T> const & elements, std:
 }
 
 
-template <typename T>
-static std::vector<T> merge_sorted_arrays_sequential(std::vector< std::vector<T> > & arrays) {
+template <typename T, typename Comp>
+static std::vector<T> merge_sorted_arrays_sequential(std::vector< std::vector<T> > & arrays, Comp comp) {
     std::vector<T> result;
 
     if(arrays.size() < 2) {
@@ -101,7 +102,8 @@ static std::vector<T> merge_sorted_arrays_sequential(std::vector< std::vector<T>
     for(std::size_t i{0}; i < arrays.size()/2; ++i) {
         separators.emplace_back( std::merge(arrays[2*i].begin()  , arrays[2*i].end(),   /*input  1*/
                                             arrays[2*i+1].begin(), arrays[2*i+1].end(), /*input  2*/
-                                            result.begin() + next_free_position) );     /*output 1*/
+                                            result.begin() + next_free_position,        /*output 1*/
+											comp) );
         next_free_position += arrays[2*i].size() + arrays[2*i+1].size();
     }
 
@@ -118,7 +120,7 @@ static std::vector<T> merge_sorted_arrays_sequential(std::vector< std::vector<T>
         auto middle_iterator = std::next(left_iterator);
         while(*middle_iterator != result.end() && separators.size() != 2) {
             auto right_iterator = std::next(middle_iterator);
-            std::inplace_merge(*left_iterator, *middle_iterator, *right_iterator);
+            std::inplace_merge(*left_iterator, *middle_iterator, *right_iterator, comp);
             separators.erase(middle_iterator);
             left_iterator   = right_iterator;
             middle_iterator = std::next(right_iterator);
@@ -129,18 +131,18 @@ static std::vector<T> merge_sorted_arrays_sequential(std::vector< std::vector<T>
     return result;
 }
 
-template <typename T>
-static std::vector<T> select_splitters(std::vector<T> & array, int process_ID, int process_number) {
+template <typename T, typename Comp>
+static std::vector<T> select_splitters(std::vector<T> & array, int process_ID, int process_number, Comp comp) {
     Timer timer(process_ID);
     // Each process sort sequentially its array.
     timer.tic("sequential sort");
-    std::sort(array.begin(), array.end());
+    std::sort(array.begin(), array.end(), comp);
     timer.toc();
 
     // Then choose process_number-1 evenly-spaced elements and send them to the first process
     std::vector<T> elements_to_send = select_evenly_spaced(array, process_number-1);
     if(process_ID > 0)
-        MPI_Send(elements_to_send.data(), elements_to_send.size(), MPI_INT, 0, 0, MPI_COMM_WORLD);
+	    MPI_Send(elements_to_send.data(), elements_to_send.size() * sizeof(T), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
     // First we create the data structure that will store the splitters
     std::vector<T> selected_splitters(process_number-1);
 
@@ -158,24 +160,24 @@ static std::vector<T> select_splitters(std::vector<T> & array, int process_ID, i
         // other processes
         for(std::size_t p{1}; p < process_number; ++p) {
             received_data.emplace_back(process_number-1);
-            MPI_Recv(received_data.back().data(), process_number-1, MPI_INT, p, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(received_data.back().data(), (process_number-1) * sizeof(T), MPI_BYTE, p, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
         // The selected splitters are SORTED, so we can merge them efficiently
-        const std::vector<T> sorted_all_splitters = merge_sorted_arrays_sequential(received_data);
+        const std::vector<T> sorted_all_splitters = merge_sorted_arrays_sequential(received_data, comp);
         // And finally we select our final splitters
         selected_splitters = select_evenly_spaced(sorted_all_splitters, process_number-1);
         timer.toc();
     }
     // The work of the process n°0 was to fill the splitters, now we can broadcast.
     timer.tic("broadcast");
-    MPI_Bcast(selected_splitters.data(), selected_splitters.size(), MPI_INT, /*root*/ 0, MPI_COMM_WORLD);
+    MPI_Bcast(selected_splitters.data(), selected_splitters.size() * sizeof(T), MPI_BYTE, /*root*/ 0, MPI_COMM_WORLD);
     timer.toc();
     
     return selected_splitters;
 }
 
-template <typename T>
-static void distributed_sort(std::vector<T> & array, int process_number, int process_ID) {
+template <typename T, typename Comp = std::less<T>>
+static void distributed_sort(std::vector<T> & array, int process_number, int process_ID, Comp comp = Comp()) {
 
     if(process_number < 2) {
         std::cerr << "The distributed_sort procedure should only be called with 2 or more processors." << std::endl
