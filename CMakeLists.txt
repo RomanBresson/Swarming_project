@@ -26,7 +26,7 @@ set(SOURCE_FILES
         src/definitions/types.h
         src/definitions/graphical_constants.h
         # Visualization part
-        src/definitions/constants.h)
+        src/definitions/constants.h src/mpi/MPI_sample_sort/sample_sort.h)
 
 add_executable(Swarming_project ${SOURCE_FILES})
 target_link_libraries(Swarming_project ${VTK_LIBRARIES} ${MPI_LIBRARIES})
