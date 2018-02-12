@@ -28,8 +28,7 @@ public:
     */
     explicit Linear_Octree(std::vector<Octree<Dimension>> octants)
         : m_octants(octants)
-    {
-    }
+    { }
 
     /**
     * Constructor for the Linear Octree class (algorithm 3).
@@ -100,6 +99,7 @@ public:
 
         MPI_Request ignored_request;
         if (process_ID != 0){
+            // TODO: False!!! Will be destroyed before Isend finish.
             std::array<int, Dimension+1> octree_msg;
             octree_msg[0] = partial_list.front().m_depth;
             std::copy(partial_list.front().m_anchor.begin(), partial_list.front().m_anchor.end(), std::next(octree_msg.begin()));
