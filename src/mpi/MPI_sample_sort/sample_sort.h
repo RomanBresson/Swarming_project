@@ -1,7 +1,6 @@
 #ifndef SWARMING_PROJECT_SAMPLE_SORT_H
 #define SWARMING_PROJECT_SAMPLE_SORT_H
 
-#include <iostream>
 #include <random>
 #include <algorithm>
 #include <cmath>
@@ -11,18 +10,20 @@
 #include <tuple>
 #include <queue>
 #include <functional>
-#include <chrono>
-#include <string>
 #include <numeric>
 #include <iterator>
 #include <list>
 
 #include "mpi.h"
 
+#include "definitions/constants.h"
+
+#if SWARMING_SORT_USE_TIMER == 1
+#include <iostream>
+#include <chrono>
+#include <string>
 class Timer {
-
 public:
-
     explicit Timer(int processor_ID) : m_processor_ID{processor_ID}
     { }
 
@@ -43,8 +44,17 @@ private:
     std::chrono::high_resolution_clock::time_point m_last_tic;
     std::string m_last_tic_name;
 };
+#endif
 
-
+#if SWARMING_SORT_USE_TIMER == 1
+#define SWARMING_SORT_CONSTRUCT_TIMER(PROCESS_ID) Timer timer(PROCESS_ID);
+#define SWARMING_SORT_TIMER_TIC(TIC_STRING)       timer.tic(TIC_STRING);
+#define SWARMING_SORT_TIMER_TOC                   timer.toc();
+#else
+#define SWARMING_SORT_CONSTRUCT_TIMER(PROCESS_ID)
+#define SWARMING_SORT_TIMER_TIC(TIC_STRING)
+#define SWARMING_SORT_TIMER_TOC
+#endif
 
 template <typename T>
 static std::vector<T> select_evenly_spaced(std::vector<T> const & elements, std::size_t number_of_elements) {
@@ -127,11 +137,12 @@ static std::vector<T> merge_sorted_arrays_sequential(std::vector< std::vector<T>
 
 template <typename T, typename Comp>
 static std::vector<T> select_splitters(std::vector<T> & array, int process_ID, int process_number, Comp comp) {
-    Timer timer(process_ID);
+
+    SWARMING_SORT_CONSTRUCT_TIMER(process_ID)
     // Each process sort sequentially its array.
-    timer.tic("sequential sort");
+    SWARMING_SORT_TIMER_TIC("sequential sort")
     std::sort(array.begin(), array.end(), comp);
-    timer.toc();
+    SWARMING_SORT_TIMER_TOC
 
     // Then choose process_number-1 evenly-spaced elements and send them to the first process
     std::vector<T> elements_to_send = select_evenly_spaced(array, process_number-1);
@@ -142,7 +153,7 @@ static std::vector<T> select_splitters(std::vector<T> & array, int process_ID, i
 
     // Then if we are the first process, receive all the data and fill the splitter data structure
     if(process_ID == 0) {
-        timer.tic("evenly-spaced elements");
+        SWARMING_SORT_TIMER_TIC("evenly-spaced elements")
         // Create the vector that will store the splitters selected by all the processes and
         // reserve enough space, even if here reallocation is cheap.
         std::vector< std::vector<T> > received_data;
@@ -160,12 +171,12 @@ static std::vector<T> select_splitters(std::vector<T> & array, int process_ID, i
         const std::vector<T> sorted_all_splitters = merge_sorted_arrays_sequential(received_data, comp);
         // And finally we select our final splitters
         selected_splitters = select_evenly_spaced(sorted_all_splitters, process_number-1);
-        timer.toc();
+        SWARMING_SORT_TIMER_TOC
     }
     // The work of the process n°0 was to fill the splitters, now we can broadcast.
-    timer.tic("broadcast");
+    SWARMING_SORT_TIMER_TIC("broadcast")
     MPI_Bcast(selected_splitters.data(), selected_splitters.size() * sizeof(T), MPI_BYTE, /*root*/ 0, MPI_COMM_WORLD);
-    timer.toc();
+    SWARMING_SORT_TIMER_TOC
 
     return selected_splitters;
 }
@@ -179,7 +190,7 @@ static void distributed_sort(std::vector<T> & array, int process_number, int pro
         return;
     }
 
-    Timer timer(process_ID);
+    SWARMING_SORT_CONSTRUCT_TIMER(process_ID)
 
     // Select the splitters.
     std::vector<T> selected_splitters = select_splitters(array, process_ID, process_number, comp);
@@ -194,7 +205,7 @@ static void distributed_sort(std::vector<T> & array, int process_number, int pro
     // Important becase we don't want a reallocation (asynchronous communications).
     MPI_Request              ignored_request;                  // We perform synchronous MPI_Recv so we don't need to wait for the asynchronous request.
     std::size_t              bucket_index{0};                  // Index of the current bucket (i.e. index of the processor that should handle it).
-    timer.tic("sending buckets");
+    SWARMING_SORT_TIMER_TIC("sending buckets")
     for(std::size_t i{0}; i < array.size(); ++i) {
         // If we enter in a new bucket, than send the data and update the bucket index
         if(array[i] > selected_splitters[bucket_index]) {
@@ -209,11 +220,11 @@ static void distributed_sort(std::vector<T> & array, int process_number, int pro
     const std::size_t buffer_size{array.size() - index_delimitation.back()};
     MPI_Isend(&buffer_size, 1, MPI_INT, bucket_index, /*tag*/ 0, MPI_COMM_WORLD, &ignored_request);
     MPI_Isend(array.data() + index_delimitation.back(), buffer_size, MPI_INT, bucket_index, /*tag*/ 1, MPI_COMM_WORLD, &ignored_request);
-    timer.toc();
+    SWARMING_SORT_TIMER_TOC
 
 
     // Each process should receive its data from all the other process.
-    timer.tic("receiving buckets");
+    SWARMING_SORT_TIMER_TIC("receiving buckets")
     std::vector< std::vector<T> > final_data;
     for(std::size_t p{0}; p < process_number; ++p) {
         std::size_t size_to_receive;
@@ -221,12 +232,12 @@ static void distributed_sort(std::vector<T> & array, int process_number, int pro
         final_data.emplace_back(size_to_receive);
         MPI_Recv(final_data.back().data(), size_to_receive, MPI_INT, p, /*tag*/ 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
-    timer.toc();
+    SWARMING_SORT_TIMER_TOC
 
     // Finally, the received data is sorted so we can merge it efficiently.
-    timer.tic("merging received data");
+    SWARMING_SORT_TIMER_TIC("merging received data")
     array = merge_sorted_arrays_sequential(final_data, comp);
-    timer.toc();
+    SWARMING_SORT_TIMER_TOC
 }
 
 #endif //SWARMING_PROJECT_SAMPLE_SORT_H

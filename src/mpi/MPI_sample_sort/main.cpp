@@ -41,10 +41,7 @@ int main ( int argc , char** argv )
         values.push_back(distribution(generator));
     }
 
-    Timer timer(process_ID);
-    timer.tic("TOTAL TIME");
     distributed_sort(values, process_number, process_ID);
-    timer.toc();
 
     // Output the values 
     // Here, the first process gather all the values and output them.
