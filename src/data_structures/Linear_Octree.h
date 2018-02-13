@@ -9,6 +9,7 @@
 #include <vector>
 #include <queue>
 #include <list>
+#include <algorithm>
 #include <iterator>
 
 /**
@@ -99,15 +100,15 @@ public:
         }
 
         MPI_Request ignored_request;
+        std::array<int, Dimension+1> octree_msg;
         if (process_ID != 0){
-            std::array<int, Dimension+1> octree_msg;
             octree_msg[0] = partial_list.front().m_depth;
             std::copy(partial_list.front().m_anchor.begin(), partial_list.front().m_anchor.end(), std::next(octree_msg.begin()));
             MPI_Isend(octree_msg.data(), octree_msg.size(), MPI_INT, process_ID-1, 0, MPI_COMM_WORLD, & ignored_request);
         }
 
+        std::array<int,Dimension+1> octree_msg_rcvd;
         if (process_ID < process_number-1){
-            std::array<int,Dimension+1> octree_msg_rcvd;
             MPI_Recv(octree_msg_rcvd.data(), octree_msg_rcvd.size(), MPI_INT, process_ID+1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             Coordinate<Dimension> rcv_anchor;
             std::copy(octree_msg_rcvd.begin(), std::prev(octree_msg_rcvd.end()), rcv_anchor.begin());
@@ -115,6 +116,7 @@ public:
         }
 
         typename std::list<Octree<Dimension>>::iterator it;
+
         for(it = partial_list.begin(); it!=std::prev(partial_list.end(),1); ++it){
             Linear_Octree<Dimension> A(*it, *(std::next(it))); //Algo 3
             m_octants.push_back(*it);
