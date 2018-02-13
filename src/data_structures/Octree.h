@@ -8,7 +8,7 @@
 #include <queue>
 
 using types::Coordinate;
-
+using types::CoordinateType;
 /**
 * Class that represents an octree.
 * @tparam m_depth      The depth of our octree
@@ -242,5 +242,20 @@ template <std::size_t Dimension>
 bool operator>(const Octree<Dimension> & oct1, const Octree<Dimension> & oct2) {
     return(oct1.morton_index() > oct2.morton_index());
 };
+
+/**
+ * Redefinition of numeric_limits<Octree<Dim>>::max() for the sort algorithm.
+ */
+namespace std {
+    template<std::size_t Dim>
+    template<> class numeric_limits<Octree<Dim>> {
+    public:
+        static Octree<Dim> max() {
+            Coordinate<Dim> anchor;
+            for(std::size_t i{0}; i < Dim; ++i) anchor[i] = static_cast<CoordinateType>(-1);
+            return Octree<Dim>(anchor, static_cast<CoordinateType>(-1));
+        }
+    };
+}
 
 #endif //SWARMING_PROJECT_OCTREE_H

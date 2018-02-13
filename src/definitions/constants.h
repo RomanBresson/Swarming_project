@@ -2,6 +2,7 @@
 #define SWARMING_PROJECT_CONSTANTS_H
 
 #define SWARMING_DO_ALL_CHECKS 1
+#define SWARMING_SORT_USE_TIMER 1
 
 namespace constants {
 
