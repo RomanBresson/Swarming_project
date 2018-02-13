@@ -29,8 +29,7 @@ public:
     */
     explicit Linear_Octree(std::vector<Octree<Dimension>> octants)
         : m_octants(octants)
-    {
-    }
+    { }
 
     /**
     * Constructor for the Linear Octree class (algorithm 3).

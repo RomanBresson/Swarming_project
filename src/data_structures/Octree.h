@@ -4,6 +4,7 @@
 #include "definitions/types.h"
 #include "definitions/constants.h"
 #include "data_structures/Boid.h"
+#include "mpi/MPI_sample_sort/sample_sort.h"
 #include <queue>
 
 using types::Coordinate;
@@ -184,7 +185,50 @@ public:
     }
 
     std::vector<Octree<Dimension>> get_siblings() const {
-        return this->get_father().get_children();
+        std::vector<Octree<Dimension>> siblings;
+        for(auto const & possible_sibling : this->get_father().get_children()) {
+            if(possible_sibling != *this) {
+                siblings.push_back(std::move(possible_sibling));
+            }
+        }
+        return siblings;
+    }
+
+
+    void balance_subtree(Octree<Dimension> const & descendant) {
+        std::vector< Octree<Dimension> > W, T, R; // Notations of the article
+        W.push_back(descendant);
+
+#ifdef SWARMING_DO_ALL_CHECKS
+        if (m_depth == 0){
+            std::cerr << "Calling balance_subtree on root! For-loop will not work." << std::endl;
+            return;
+        }
+#endif
+
+        for(std::size_t l{descendant.m_depth}; l > this->m_depth; --l) {
+            for(Octree<Dimension> const & w : W) {
+                // Update of R with w and its siblings.
+                R.push_back(w);
+                auto const siblings = w.get_siblings();
+                R.insert(R.end(), siblings.begin(), siblings.end());
+
+                // Update of T
+                std::vector< Octree<Dimension> > father_neighbours = w.get_father().get_siblings();
+                for(auto const & father_neighbour : father_neighbours) {
+                    if(this->is_ancestor(father_neighbour))
+                        T.push_back(std::move(father_neighbour));
+                }
+            }
+            W = T;
+        }
+
+        // TODO: may be in distributed.
+        std::sort(R.begin(), R.end());
+        // Sort(R)
+        // RemoveDuplicates(R)
+
+        // Linearise(R)
     }
 
 };
