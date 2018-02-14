@@ -21,6 +21,8 @@ public:
     std::size_t m_depth;
     Coordinate<Dimension> m_anchor;
 
+    Octree() = default;
+
     /**
     * Constructor for the Octree class.
     * @param depth  Depth of the octree, MUST BE STRICTLY INFERIOR TO DMAX.
@@ -247,8 +249,9 @@ bool operator>(const Octree<Dimension> & oct1, const Octree<Dimension> & oct2) {
  * Redefinition of numeric_limits<Octree<Dim>>::max() for the sort algorithm.
  */
 namespace std {
+    template<>
     template<std::size_t Dim>
-    template<> class numeric_limits<Octree<Dim>> {
+    class numeric_limits<Octree<Dim>> {
     public:
         static Octree<Dim> max() {
             Coordinate<Dim> anchor;
