@@ -26,11 +26,12 @@ int main(int argc, char *argv[]) {
     for(std::size_t i{0}; i < 1000; ++i) {
         Coordinate<DIMENSION> anchor;
         for(std::size_t d{0}; d < DIMENSION; ++d)
-            anchor[d] = static_cast<unsigned long>(((process_ID + 53 * d) * (958 + process_ID*57) / (d+567)) % (477*(d+7)));
-        l.emplace_back(anchor, (process_ID + 87) * (process_ID + 54) / (process_ID+3) % (process_ID + 2) + 1);
+            anchor[d] = static_cast<unsigned long>(((process_ID + 53 * (d+i)) * (958 + i + process_ID*57) / (d+567)) % (477*(d+7)+i));
+        l.emplace_back(anchor, ((process_ID + 87*i) * (process_ID + 54*i*i)) * (process_ID+3*i+1) % (process_ID + 2) + 1);
     }
 
     Linear_Octree<DIMENSION> LO(l);
+    std::cout << "[" << process_ID << "] I'm here!!!" << std::endl;
     MPI_Barrier(MPI_COMM_WORLD);
     distributed_sort(LO.m_octants, process_number, process_ID);
 
