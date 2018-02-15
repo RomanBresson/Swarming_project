@@ -56,6 +56,7 @@ private:
 #define SWARMING_SORT_TIMER_TOC
 #endif
 
+
 template <typename T>
 static std::vector<T> select_evenly_spaced(std::vector<T> const & elements, std::size_t number_of_elements) {
     // Select number_of_elements in the vector elements.
@@ -190,6 +191,7 @@ static void distributed_sort(std::vector<T> & array, int process_number, int pro
         return;
     }
 
+
     SWARMING_SORT_CONSTRUCT_TIMER(process_ID)
 
     // Select the splitters.
@@ -210,16 +212,16 @@ static void distributed_sort(std::vector<T> & array, int process_number, int pro
         // If we enter in a new bucket, than send the data and update the bucket index
         if(array[i] > selected_splitters[bucket_index]) {
             sizes.emplace_back(i - index_delimitation.back());
-            MPI_Isend(&(sizes.back()), 1, MPI_INT, bucket_index, /*tag*/ 0, MPI_COMM_WORLD, &ignored_request);
-            MPI_Isend(array.data() + index_delimitation.back(), sizes.back(), MPI_INT, bucket_index, /*tag*/ 1, MPI_COMM_WORLD, &ignored_request);
+            MPI_Isend(&(sizes.back()), 1, MPI_UNSIGNED_LONG_LONG, bucket_index, /*tag*/ 0, MPI_COMM_WORLD, &ignored_request);
+            MPI_Isend(array.data() + index_delimitation.back(), sizes.back(), MPI_UNSIGNED_LONG_LONG, bucket_index, /*tag*/ 1, MPI_COMM_WORLD, &ignored_request);
             index_delimitation.emplace_back(i);
             ++bucket_index;
         }
     }
     // The last bucket has not been sent in the loop, so we need to send it now.
     const std::size_t buffer_size{array.size() - index_delimitation.back()};
-    MPI_Isend(&buffer_size, 1, MPI_INT, bucket_index, /*tag*/ 0, MPI_COMM_WORLD, &ignored_request);
-    MPI_Isend(array.data() + index_delimitation.back(), buffer_size, MPI_INT, bucket_index, /*tag*/ 1, MPI_COMM_WORLD, &ignored_request);
+    MPI_Isend(&buffer_size, 1, MPI_UNSIGNED_LONG_LONG, bucket_index, /*tag*/ 0, MPI_COMM_WORLD, &ignored_request);
+    MPI_Isend(array.data() + index_delimitation.back(), buffer_size, MPI_UNSIGNED_LONG_LONG, bucket_index, /*tag*/ 1, MPI_COMM_WORLD, &ignored_request);
     SWARMING_SORT_TIMER_TOC
 
 
@@ -228,9 +230,9 @@ static void distributed_sort(std::vector<T> & array, int process_number, int pro
     std::vector< std::vector<T> > final_data;
     for(std::size_t p{0}; p < process_number; ++p) {
         std::size_t size_to_receive;
-        MPI_Recv(&size_to_receive, 1, MPI_INT, p, /*tag*/ 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&size_to_receive, 1, MPI_UNSIGNED_LONG_LONG, p, /*tag*/ 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         final_data.emplace_back(size_to_receive);
-        MPI_Recv(final_data.back().data(), size_to_receive, MPI_INT, p, /*tag*/ 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(final_data.back().data(), size_to_receive, MPI_UNSIGNED_LONG_LONG, p, /*tag*/ 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
     SWARMING_SORT_TIMER_TOC
 

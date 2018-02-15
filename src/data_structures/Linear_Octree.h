@@ -129,6 +129,7 @@ public:
             m_octants.push_back(partial_list.back());
         }
     }
+    
     /**
     * Removes duplicates from the vector
     * TODO The vector must be sorted
