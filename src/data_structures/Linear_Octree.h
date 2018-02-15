@@ -11,6 +11,7 @@
 #include <list>
 #include <algorithm>
 #include <iterator>
+#include "mpi/MPI_sample_sort/sample_sort.h"
 
 /**
 * Class that represents an octree.
@@ -68,7 +69,7 @@ public:
 
     /**
     * Constructor for the Linear Octree class (algorithm 4).
-    * @param L : partial sorted list of octants
+    * @param L : partial TODO sorted list of octants
     */
     Linear_Octree(std::list<Octree<Dimension>> partial_list)
     {
@@ -130,7 +131,7 @@ public:
     }
     /**
     * Removes duplicates from the vector
-    * The vector must be sorted
+    * TODO The vector must be sorted
     */
     void remove_duplicates() {
         for (int i = 1; i < m_octants.size(); i++) {
@@ -143,7 +144,7 @@ public:
 
     /**
     * Removes duplicates from the list
-    * The list must be sorted
+    * TODO The list must be sorted
     */
     void remove_duplicates(std::list<Octree<Dimension>> & octants_list) {
         typename std::list<Octree<Dimension>>::iterator it;
@@ -157,7 +158,7 @@ public:
 
     /**
     * Removes overlaps from the vector (algo 7 in the paper)
-    * The vector needs to be sorted
+    * TODO The vector needs to be sorted
     */
     void remove_overlaps() {
         for (int i = 1; i < m_octants.size(); i++) {
