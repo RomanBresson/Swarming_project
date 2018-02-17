@@ -2,7 +2,9 @@
 #include <random>
 
 #include "mpi.h"
-#include "sample_sort.h"
+#include "../sample_sort.h"
+
+
 template <typename T>
 static std::ostream & operator<<(std::ostream& os, std::vector<T> const & vec) {
     os << vec.size() << "{";
