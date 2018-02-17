@@ -3,10 +3,10 @@
 
 #include "algorithms/remove_duplicates.h"
 
-template <typename Container, typename StoredData>
-Container<StoredData> linearise(Container<StoredData> & container) {
+template <typename Container, typename StoredDataType = typename Container::value_type>
+Container<StoredDataType> linearise(Container const & container) {
     return remove_duplicates(container,
-                             [](StoredData const & lhs, StoredData const & rhs) { return lhs.is_ancestor(rhs); });
+                             [](StoredDataType const & lhs, StoredDataType const & rhs) { return lhs.is_ancestor(rhs); });
 }
 
 
