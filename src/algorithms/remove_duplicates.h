@@ -62,10 +62,8 @@ Container remove_duplicates(Container const & container,
         if(is_duplicate(container_without_duplicates.back(), next_element))
             container_without_duplicates.pop_back();
 
-    // We need to wait here because the last process does not receive anything and so can exit this block (and destroy
-    // the data being sent) before the sending operation was complete.
-    if(process_ID == process_number-1)
-        MPI_Wait(&request, MPI_STATUS_IGNORE);
+    // We need to wait here because we don't want a process to exit before its sending operation was complete.
+    MPI_Barrier(MPI_COMM_WORLD);
 
     return container_without_duplicates;
 };
