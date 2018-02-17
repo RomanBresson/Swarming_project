@@ -23,11 +23,14 @@ int main(int argc, char *argv[]) {
 
     std::list<Octree<DIMENSION>> l;
 
-    for(std::size_t i{0}; i < 1000; ++i) {
+    constexpr const std::size_t level{5};
+
+    for(std::size_t i{0}; i < (1<<(DIMENSION*level)); ++i) {
         Coordinate<DIMENSION> anchor;
-        for(std::size_t d{0}; d < DIMENSION; ++d)
-            anchor[d] = static_cast<unsigned long>(((process_ID + 53 * (d+i)) * (958 + i + process_ID*57) / (d+567)) % (477*(d+7)+i));
-        l.emplace_back(anchor, ((process_ID + 87*i) * (process_ID + 54*i*i)) * (process_ID+3*i+1) % (process_ID + 2) + 1);
+        for(std::size_t j{0}; j < DIMENSION; ++j) anchor[j] = 0;
+        for(std::size_t j{0}; j < DIMENSION*level; ++j)
+            anchor[j%DIMENSION] |= ((i >> j) & 1) << (j/DIMENSION);
+        l.emplace_back(anchor, level);
     }
 
     Linear_Octree<DIMENSION> LO(l);
