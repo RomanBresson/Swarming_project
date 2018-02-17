@@ -136,6 +136,7 @@ static std::vector<T> merge_sorted_arrays_sequential(std::vector< std::vector<T>
     return result;
 }
 
+
 template <typename T, typename Comp>
 static std::vector<T> select_splitters(std::vector<T> & array, int process_ID, int process_number, Comp comp) {
 
@@ -213,7 +214,7 @@ static void distributed_sort(std::vector<T> & array, int process_number, int pro
         if(array[i] > selected_splitters[bucket_index]) {
             sizes.emplace_back(i - index_delimitation.back());
             MPI_Isend(&(sizes.back()), 1, MPI_UNSIGNED_LONG_LONG, bucket_index, /*tag*/ 0, MPI_COMM_WORLD, &ignored_request);
-            MPI_Isend(array.data() + index_delimitation.back(), sizes.back(), MPI_UNSIGNED_LONG_LONG, bucket_index, /*tag*/ 1, MPI_COMM_WORLD, &ignored_request);
+            MPI_Isend(array.data() + index_delimitation.back(), sizes.back() * sizeof(T), MPI_BYTE, bucket_index, /*tag*/ 1, MPI_COMM_WORLD, &ignored_request);
             index_delimitation.emplace_back(i);
             ++bucket_index;
         }
@@ -221,7 +222,7 @@ static void distributed_sort(std::vector<T> & array, int process_number, int pro
     // The last bucket has not been sent in the loop, so we need to send it now.
     const std::size_t buffer_size{array.size() - index_delimitation.back()};
     MPI_Isend(&buffer_size, 1, MPI_UNSIGNED_LONG_LONG, bucket_index, /*tag*/ 0, MPI_COMM_WORLD, &ignored_request);
-    MPI_Isend(array.data() + index_delimitation.back(), buffer_size, MPI_UNSIGNED_LONG_LONG, bucket_index, /*tag*/ 1, MPI_COMM_WORLD, &ignored_request);
+    MPI_Isend(array.data() + index_delimitation.back(), buffer_size * sizeof(T), MPI_BYTE, bucket_index, /*tag*/ 1, MPI_COMM_WORLD, &ignored_request);
     SWARMING_SORT_TIMER_TOC
 
 
@@ -232,10 +233,11 @@ static void distributed_sort(std::vector<T> & array, int process_number, int pro
         std::size_t size_to_receive;
         MPI_Recv(&size_to_receive, 1, MPI_UNSIGNED_LONG_LONG, p, /*tag*/ 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         final_data.emplace_back(size_to_receive);
-        MPI_Recv(final_data.back().data(), size_to_receive, MPI_UNSIGNED_LONG_LONG, p, /*tag*/ 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(final_data.back().data(), size_to_receive * sizeof(T), MPI_BYTE, p, /*tag*/ 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
     SWARMING_SORT_TIMER_TOC
 
+    //MPI_Barrier(MPI_COMM_WORLD);
     // Finally, the received data is sorted so we can merge it efficiently.
     SWARMING_SORT_TIMER_TIC("merging received data")
     array = merge_sorted_arrays_sequential(final_data, comp);
