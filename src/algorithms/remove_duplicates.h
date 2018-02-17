@@ -27,6 +27,7 @@ Container remove_duplicates(Container const & container,
     auto end        = container.end();
     auto before_end = std::prev(end);
 
+    // First remove all the duplicates in the local data.
     for(auto octant_it = container.begin();
         octant_it != before_end && octant_it != end;
         ++octant_it) {
@@ -41,6 +42,30 @@ Container remove_duplicates(Container const & container,
             ++next_it;
         }
     }
+
+    // Then we may need to remove the last element because the next processor already store it.
+    int process_ID, process_number;
+    MPI_Comm_size(MPI_COMM_WORLD, &process_number);
+    MPI_Comm_rank(MPI_COMM_WORLD, &process_ID);
+
+    MPI_Request request;
+    StoredData next_element;
+
+    if(process_ID != 0)
+        // Send the first element to the previous process.
+        MPI_Isend(container_without_duplicates.data(), sizeof(StoredData), MPI_BYTE, process_ID-1, /*tag*/ 0, MPI_COMM_WORLD, &request);
+    if(process_ID != process_number-1)
+        // Receive the first element of the next process.
+        MPI_Recv(&next_element, sizeof(StoredData), MPI_BYTE, process_ID+1, /*tag*/ 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        // And check if it is considered as a duplicate.
+        if(is_duplicate(container_without_duplicates.back(), next_element))
+            container_without_duplicates.pop_back();
+
+    // We need to wait here because the last process does not receive anything and so can exit this block (and destroy
+    // the data being sent) before the sending operation was complete.
+    if(process_ID == process_number-1)
+        MPI_Wait(&request, MPI_STATUS_IGNORE);
+
     return container_without_duplicates;
 };
 
