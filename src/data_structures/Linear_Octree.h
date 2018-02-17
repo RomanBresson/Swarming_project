@@ -13,6 +13,7 @@
 #include "data_structures/Octree.h"
 
 #include "algorithms/complete_region.h"
+#include "algorithms/remove_duplicates.h"
 
 /**
 * Class that represents an octree.
@@ -46,7 +47,7 @@ public:
     * Constructor for the Linear Octree class (algorithm 4).
     * @param L : partial TODO sorted list of octants
     */
-    Linear_Octree(std::list<Octree<Dimension>> partial_list)
+    explicit Linear_Octree(std::list<Octree<Dimension>> partial_list)
     {
         int process_number, process_ID;
 
@@ -104,46 +105,7 @@ public:
             m_octants.push_back(partial_list.back());
         }
     }
-    
-    /**
-    * Removes duplicates from the vector
-    * TODO The vector must be sorted
-    */
-    void remove_duplicates() {
-        for (int i = 1; i < m_octants.size(); i++) {
-            if ((m_octants.at(i-1).m_anchor == m_octants.at(i).m_anchor) && (m_octants.at(i-1).m_depth == m_octants.at(i).m_depth)) {
-                m_octants.erase(std::next(m_octants.begin()+i-2));
-                i--;
-            }
-        }
-    }
 
-    /**
-    * Removes duplicates from the list
-    * TODO The list must be sorted
-    */
-    void remove_duplicates(std::list<Octree<Dimension>> & octants_list) {
-        typename std::list<Octree<Dimension>>::iterator it;
-        for(it = octants_list.begin(); it!=std::prev(octants_list.end(),1); ++it){
-            if ((*it).morton_index() == (*(std::next(it, 1))).morton_index()){
-                octants_list.erase(next(it,1));
-                it--;
-            }
-        }
-    }
-
-    /**
-    * Removes overlaps from the vector (algo 7 in the paper)
-    * TODO The vector needs to be sorted
-    */
-    void remove_overlaps() {
-        for (int i = 1; i < m_octants.size(); i++) {
-            if (m_octants.at(i-1).is_ancestor(m_octants.at(i))) {
-                m_octants.erase(std::next(m_octants.begin()+i-2));
-                i--;
-            }
-        }
-    }
 };
 
 #endif //SWARMING_PROJECT_LINEAR_OCTREE_H
