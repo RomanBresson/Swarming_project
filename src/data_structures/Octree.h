@@ -5,7 +5,7 @@
 #include "definitions/constants.h"
 #include "data_structures/Boid.h"
 #include "mpi/MPI_sample_sort/sample_sort.h"
-#include <queue>
+#include "algorithms/morton_index.h"
 
 using types::Coordinate;
 using types::CoordinateType;
@@ -18,7 +18,7 @@ template <std::size_t Dimension>
 class Octree {
 
 public:
-    std::size_t m_depth;
+    std::size_t m_depth{};
     Coordinate<Dimension> m_anchor;
 
     Octree() = default;
@@ -42,26 +42,17 @@ public:
     explicit Octree(Boid<Dimension> const & boid)
             : m_depth(constants::Dmax)
     {
-        //m_anchor = boid.m_position / (static_cast<double>(GRID_SIZE) / (1 << constants::Dmax));
-        for (std::size_t i{0}; i < Dimension; ++i) {
-            double case_size = static_cast<double>(GRID_SIZE) / (1 << constants::Dmax);
+        double const case_size{static_cast<double>(GRID_SIZE) / static_cast<double>(1 << constants::Dmax)};
+        // TODO: we can use vectorisation here if we define the static_cast (or the cast) operation on a vector.
+        for (std::size_t i{0}; i < Dimension; ++i)
             m_anchor[i] = static_cast<int>(boid.m_position[i] / case_size);
-        }
     }
 
     /**
-    * Creates the morton index.
+    * Computes the morton index.
     */
     std::size_t morton_index() const{
-        std::size_t morton_enc = m_depth & 0x1F;
-        std::size_t bit_position{5};
-        for (std::size_t dimension_bit_position{0}; dimension_bit_position < constants::Dmax; ++dimension_bit_position){
-            for (std::size_t dimension{0}; dimension < Dimension; ++dimension){
-                morton_enc += ( (m_anchor[dimension]>>dimension_bit_position) & 1) << bit_position;
-                bit_position++;
-            }
-        }
-        return(morton_enc);
+        return get_morton_index(m_anchor, m_depth);
     }
 
     /**
@@ -148,7 +139,7 @@ public:
     }
 
     /**
-    * Returns the queue containing every children of the current octree.
+    * Returns the vector containing every children of the current octree.
     */
     std::vector<Octree<Dimension>> get_children() const{
 #ifdef SWARMING_DO_ALL_CHECKS
@@ -188,49 +179,13 @@ public:
 
     std::vector<Octree<Dimension>> get_siblings() const {
         std::vector<Octree<Dimension>> siblings;
+        if(this->m_depth == 0) return siblings;
         for(auto const & possible_sibling : this->get_father().get_children()) {
             if(possible_sibling != *this) {
                 siblings.push_back(std::move(possible_sibling));
             }
         }
         return siblings;
-    }
-
-
-    void balance_subtree(Octree<Dimension> const & descendant) {
-        std::vector< Octree<Dimension> > W, T, R; // Notations of the article
-        W.push_back(descendant);
-
-#ifdef SWARMING_DO_ALL_CHECKS
-        if (m_depth == 0){
-            std::cerr << "Calling balance_subtree on root! For-loop will not work." << std::endl;
-            return;
-        }
-#endif
-
-        for(std::size_t l{descendant.m_depth}; l > this->m_depth; --l) {
-            for(Octree<Dimension> const & w : W) {
-                // Update of R with w and its siblings.
-                R.push_back(w);
-                auto const siblings = w.get_siblings();
-                R.insert(R.end(), siblings.begin(), siblings.end());
-
-                // Update of T
-                std::vector< Octree<Dimension> > father_neighbours = w.get_father().get_siblings();
-                for(auto const & father_neighbour : father_neighbours) {
-                    if(this->is_ancestor(father_neighbour))
-                        T.push_back(std::move(father_neighbour));
-                }
-            }
-            W = T;
-        }
-
-        // TODO: may be in distributed.
-        std::sort(R.begin(), R.end());
-        // Sort(R)
-        // RemoveDuplicates(R)
-
-        // Linearise(R)
     }
 
 };
@@ -244,6 +199,11 @@ template <std::size_t Dimension>
 bool operator>(const Octree<Dimension> & oct1, const Octree<Dimension> & oct2) {
     return(oct1.morton_index() > oct2.morton_index());
 };
+
+template <std::size_t D>
+std::ostream & operator<<(std::ostream & os, Octree<D> const & octree) {
+    return os << "{ depth = " << octree.m_depth << ", anchor = " << octree.m_anchor << "}";
+}
 
 /**
  * Redefinition of numeric_limits<Octree<Dim>>::max() for the sort algorithm.
