@@ -4,7 +4,7 @@
 #include "definitions/types.h"
 #include "definitions/constants.h"
 #include "data_structures/Boid.h"
-#include "mpi/MPI_sample_sort/sample_sort.h"
+#include "mpi/sample_sort.h"
 #include "algorithms/morton_index.h"
 
 using types::Coordinate;
