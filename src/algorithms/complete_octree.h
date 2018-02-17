@@ -11,10 +11,10 @@
 #include "algorithms/linearise.h"
 #include "algorithms/partition.h"
 #include "definitions/constants.h"
+#include "algorithms/is_sorted_distributed.h"
 
 #if SWARMING_DO_ALL_CHECKS == 1
 #include <cassert>
-#include <algorithm>
 #endif
 
 template <std::size_t Dimension>
@@ -28,21 +28,7 @@ std::vector<Octree<Dimension>> complete_octree(std::list<Octree<Dimension>> part
 
 
 #if SWARMING_DO_ALL_CHECKS == 1
-    // Sorted locally
-    assert(std::is_sorted(partial_list.begin(), partial_list.end()));
-
-    // Sorted globally
-    MPI_Request swarming_do_all_check_request;
-    if(process_ID != process_number-1)
-        MPI_Isend(&partial_list.back(), sizeof(Octree<Dimension>), MPI_BYTE, process_ID+1, /*tag*/ 0,
-                  MPI_COMM_WORLD, &swarming_do_all_check_request);
-    Octree<Dimension> tmp;
-    if(process_ID != 0)
-        MPI_Recv(&tmp, sizeof(Octree<Dimension>), MPI_BYTE, process_ID-1, /*tag*/, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-    assert(tmp < partial_list.front());
-    // Wait for the processes because we don't want this "debug" section to interact with the algorithm at all.
-    MPI_Barrier(MPI_COMM_WORLD);
+    assert(is_sorted_distributed(partial_list));
 #endif
 
 
