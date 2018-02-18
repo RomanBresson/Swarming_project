@@ -2,6 +2,7 @@
 #define SWARMING_PROJECT_MORTON_INDEX_H
 
 #include <type_traits>
+#include <array>
 #include "definitions/constants.h"
 
 #if SWARMING_DO_ALL_CHECKS == 1

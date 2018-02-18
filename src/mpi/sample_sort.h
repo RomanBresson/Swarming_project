@@ -17,8 +17,10 @@
 #include "mpi.h"
 
 #include "definitions/constants.h"
+#include "algorithms/merge_sorted_arrays.h"
 
 #if SWARMING_SORT_USE_TIMER == 1
+
 #include <iostream>
 #include <chrono>
 #include <string>
@@ -44,12 +46,10 @@ private:
     std::chrono::high_resolution_clock::time_point m_last_tic;
     std::string m_last_tic_name;
 };
-#endif
-
-#if SWARMING_SORT_USE_TIMER == 1
 #define SWARMING_SORT_CONSTRUCT_TIMER(PROCESS_ID) Timer timer(PROCESS_ID);
 #define SWARMING_SORT_TIMER_TIC(TIC_STRING)       timer.tic(TIC_STRING);
 #define SWARMING_SORT_TIMER_TOC                   timer.toc();
+
 #else
 #define SWARMING_SORT_CONSTRUCT_TIMER(PROCESS_ID)
 #define SWARMING_SORT_TIMER_TIC(TIC_STRING)
@@ -76,66 +76,6 @@ static std::vector<T> select_evenly_spaced(std::vector<T> const & elements, std:
 
     return selected_elements;
 }
-
-
-template <typename T, typename Comp>
-static std::vector<T> merge_sorted_arrays_sequential(std::vector< std::vector<T> > & arrays, Comp comp) {
-    std::vector<T> result;
-
-    if(arrays.size() < 2) {
-        std::cerr << "merge_sorted_arrays_sequential should be called with 2 or more arrays to merge." << std::endl;
-        return result;
-    }
-
-    // Sort the vector of values by increasing lengths for a better efficiency.
-    // We can try to remove the 2 following lines after and analyse the performance.
-    auto comparator = [] (std::vector<T> const & lhs, std::vector<T> const & rhs) { return lhs.size() < rhs.size(); };
-    std::sort(arrays.begin(), arrays.end(), comparator);
-
-    // Computing the total number of elements in order to save some re-allocations
-    auto add_size = [] (std::size_t const & previous_size, std::vector<T> const & elem) { return previous_size + elem.size(); };
-    std::size_t const number_of_elements{ std::accumulate(arrays.begin(), arrays.end(), static_cast<std::size_t>(0), add_size) };
-
-    // Resize the resulting vector to be sure that all the values can fit in it.
-    result.resize(number_of_elements);
-
-    // First step, use the std::merge to combine the merge and the copy of the data.
-    // We also keep track of the iterator that separate 2 non-sorted lists in separators.
-    // separators stores iterators pointing to the beginning of a non-sorted sequence.
-    std::list< typename std::vector<T>::iterator > separators{result.begin()};
-    std::size_t next_free_position{0};
-    for(std::size_t i{0}; i < arrays.size()/2; ++i) {
-        separators.emplace_back( std::merge(arrays[2*i].begin()  , arrays[2*i].end(),   /*input  1*/
-                                            arrays[2*i+1].begin(), arrays[2*i+1].end(), /*input  2*/
-                                            result.begin() + next_free_position,        /*output 1*/
-                                            comp) );
-        next_free_position += arrays[2*i].size() + arrays[2*i+1].size();
-    }
-
-    if(arrays.size()%2)
-        separators.emplace_back( std::copy(arrays.back().begin(), arrays.back().end(), separators.back()) );
-
-    // Now result contain all the values, we just need to merge all the lists not merged in the previous step.
-    // In the separators list, we also have the begin() and end() iterators, that is why our stop condition is
-    // that the separators list should contain only 2 elements: the begin() and the end()
-    while(separators.size() != 2) {
-        // We will iterate over each separators, and each time merge two blocks
-        // by merging first the smallest blocks.
-        auto left_iterator   = separators.begin();
-        auto middle_iterator = std::next(left_iterator);
-        while(*middle_iterator != result.end() && separators.size() != 2) {
-            auto right_iterator = std::next(middle_iterator);
-            std::inplace_merge(*left_iterator, *middle_iterator, *right_iterator, comp);
-            separators.erase(middle_iterator);
-            left_iterator   = right_iterator;
-            middle_iterator = std::next(right_iterator);
-        }
-    }
-
-    // Return the result
-    return result;
-}
-
 
 template <typename T, typename Comp>
 static std::vector<T> select_splitters(std::vector<T> & array, int process_ID, int process_number, Comp comp) {
@@ -243,5 +183,9 @@ static void distributed_sort(std::vector<T> & array, int process_number, int pro
     array = merge_sorted_arrays_sequential(final_data, comp);
     SWARMING_SORT_TIMER_TOC
 }
+
+#undef SWARMING_SORT_CONSTRUCT_TIMER(PROCESS_ID)
+#undef SWARMING_SORT_TIMER_TIC(TIC_STRING)
+#undef SWARMING_SORT_TIMER_TOC
 
 #endif //SWARMING_PROJECT_SAMPLE_SORT_H

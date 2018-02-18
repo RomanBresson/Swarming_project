@@ -4,7 +4,7 @@
 #include "definitions/types.h"
 #include "definitions/constants.h"
 #include "data_structures/Boid.h"
-#include "mpi/MPI_sample_sort/sample_sort.h"
+#include "mpi/sample_sort.h"
 #include "algorithms/morton_index.h"
 
 using types::Coordinate;
@@ -31,9 +31,7 @@ public:
     Octree(Coordinate<Dimension> const & anchor, std::size_t const & depth)
             : m_anchor(anchor),
               m_depth(depth)
-    {
-
-    }
+    { }
 
     /**
     * Constructor for the Octree class.
@@ -142,6 +140,7 @@ public:
     * Returns the vector containing every children of the current octree.
     */
     std::vector<Octree<Dimension>> get_children() const{
+        // TODO: check that the returned children are ordered!
 #ifdef SWARMING_DO_ALL_CHECKS
         if (m_depth == Dmax){
             std::cerr << "WARNING: Requesting children of a node at depth Dmax" << std::endl;
@@ -178,9 +177,11 @@ public:
     }
 
     std::vector<Octree<Dimension>> get_siblings() const {
+        // TODO: check that the siblings are ordered!!
+        // The same as checking that get_children() is ordered.
         std::vector<Octree<Dimension>> siblings;
-        if(this->m_depth == 0) return siblings;
-        for(auto const & possible_sibling : this->get_father().get_children()) {
+        if(m_depth == 0) return siblings;
+        for(auto possible_sibling : this->get_father().get_children()) {
             if(possible_sibling != *this) {
                 siblings.push_back(std::move(possible_sibling));
             }

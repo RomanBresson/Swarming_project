@@ -4,6 +4,7 @@
 #include <iterator>
 #include <functional>
 #include "definitions/constants.h"
+#include "mpi.h"
 
 #if SWARMING_DO_ALL_CHECKS == 1
 #include <algorithm>
@@ -15,9 +16,9 @@
  * of octants.
  */
 
-template <typename Container, typename StoredData = typename Container::value_type>
+template <typename Container, typename StoredDataType = typename Container::value_type>
 Container remove_duplicates(Container const & container,
-                            std::function<bool(StoredData const &, StoredData const &)> is_duplicate = std::equal_to<StoredData const &>()) {
+                            std::function<bool(StoredDataType const &, StoredDataType const &)> is_duplicate = std::equal_to<StoredDataType const &>()) {
 
 #if SWARMING_DO_ALL_CHECKS == 1
     assert(std::is_sorted(container.begin(), container.end()));
@@ -49,22 +50,20 @@ Container remove_duplicates(Container const & container,
     MPI_Comm_rank(MPI_COMM_WORLD, &process_ID);
 
     MPI_Request request;
-    StoredData next_element;
+    StoredDataType next_element;
 
     if(process_ID != 0)
         // Send the first element to the previous process.
-        MPI_Isend(container_without_duplicates.data(), sizeof(StoredData), MPI_BYTE, process_ID-1, /*tag*/ 0, MPI_COMM_WORLD, &request);
+        MPI_Isend(container_without_duplicates.data(), sizeof(StoredDataType), MPI_BYTE, process_ID-1, /*tag*/ 0, MPI_COMM_WORLD, &request);
     if(process_ID != process_number-1)
         // Receive the first element of the next process.
-        MPI_Recv(&next_element, sizeof(StoredData), MPI_BYTE, process_ID+1, /*tag*/ 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&next_element, sizeof(StoredDataType), MPI_BYTE, process_ID+1, /*tag*/ 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         // And check if it is considered as a duplicate.
         if(is_duplicate(container_without_duplicates.back(), next_element))
             container_without_duplicates.pop_back();
 
-    // We need to wait here because the last process does not receive anything and so can exit this block (and destroy
-    // the data being sent) before the sending operation was complete.
-    if(process_ID == process_number-1)
-        MPI_Wait(&request, MPI_STATUS_IGNORE);
+    // We need to wait here because we don't want a process to exit before its sending operation was complete.
+    MPI_Barrier(MPI_COMM_WORLD);
 
     return container_without_duplicates;
 };
