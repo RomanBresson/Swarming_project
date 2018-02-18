@@ -39,7 +39,9 @@ set(SOURCE_FILES
         src/algorithms/merge_sorted_arrays.h
         #src/algorithms/points2octree.h
         #src/algorithms/block_partition.h
-        src/algorithms/is_sorted_distributed.h)
+        src/algorithms/is_sorted_distributed.h
+        src/algorithms/sorted_search_distributed.h
+		src/algorithms/sorted_count_distributed.h)
 
 add_executable(Swarming_project ${SOURCE_FILES})
 target_link_libraries(Swarming_project ${VTK_LIBRARIES} ${MPI_LIBRARIES})
