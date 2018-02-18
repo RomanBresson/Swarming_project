@@ -2,7 +2,7 @@
 #include <random>
 
 #include "mpi.h"
-#include "../sample_sort.h"
+#include "algorithms/sample_sort.h"
 
 
 template <typename T>

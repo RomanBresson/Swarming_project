@@ -2,19 +2,17 @@
 #define SWARMING_PROJECT_IS_SORTED_DISTRIBUTED_H
 
 #include <algorithm>
+#include <functional>
 
 #include "mpi.h"
 
-template <typename Container>
-bool is_sorted_distributed(Container const & container) {
+template <typename Container, typename StoredDataType = typename Container::value_type, typename Comp = std::less<StoredDataType>>
+bool is_sorted_distributed(Container const & container, Comp comp = Comp()) {
 
-    using StoredDataType = typename Container::value_type;
-
-    bool local_result{true}, global_result;
+    bool local_result, global_result;
 
     // Check first the sorted property locally on each processor.
-    if(! std::is_sorted(container.begin(), container.end()))
-        local_result = false;
+    local_result = std::is_sorted(container.begin(), container.end(), comp);
     // All the processors should agree, so if one processor is not sorted, then all the processors should return false.
     MPI_Allreduce(&local_result, &global_result, 1, MPI_CXX_BOOL, MPI_LAND, MPI_COMM_WORLD);
     if(!global_result) return false;
@@ -29,23 +27,18 @@ bool is_sorted_distributed(Container const & container) {
     if (process_ID != process_number - 1)
         MPI_Isend(&container.back(), sizeof(StoredDataType), MPI_BYTE, process_ID + 1, /*tag*/ 0,
                   MPI_COMM_WORLD, &request);
-    StoredDataType tmp;
-    if (process_ID != 0)
-        MPI_Recv(&tmp, sizeof(StoredDataType), MPI_BYTE, process_ID - 1, /*tag*/, MPI_COMM_WORLD,
-                 MPI_STATUS_IGNORE);
 
-    if (tmp > container.front())
-        local_result = false;
+    if (process_ID != 0) {
+        StoredDataType tmp;
+        MPI_Recv(&tmp, sizeof(StoredDataType), MPI_BYTE, process_ID - 1, /*tag*/ 0, MPI_COMM_WORLD,
+                 MPI_STATUS_IGNORE);
+        if (comp(container.front(), tmp))
+            local_result = false;
+    }
 
     // Same as before, all the processors should agree:
     MPI_Allreduce(&local_result, &global_result, 1, MPI_CXX_BOOL, MPI_LAND, MPI_COMM_WORLD);
-    if(!global_result) return false;
-
-    // Wait for the processes because we don't want this "debug" section to interact with the algorithm at all.
-    MPI_Barrier(MPI_COMM_WORLD);
-
-    // Finally if everything is sorted, return true
-    return true;
+    return global_result;
 }
 
 #endif //SWARMING_PROJECT_IS_SORTED_DISTRIBUTED_H
