@@ -30,7 +30,7 @@ set(SOURCE_FILES
         src/mpi/sample_sort.h
         src/algorithms/remove_duplicates.h
         src/algorithms/morton_index.h
-        src/algorithms/balance_subtree.h
+        #src/algorithms/balance_subtree.h
         src/algorithms/linearise.h
         src/algorithms/complete_region.h
         src/algorithms/complete_octree.h

@@ -184,8 +184,8 @@ static void distributed_sort(std::vector<T> & array, int process_number, int pro
     SWARMING_SORT_TIMER_TOC
 }
 
-#undef SWARMING_SORT_CONSTRUCT_TIMER(PROCESS_ID)
-#undef SWARMING_SORT_TIMER_TIC(TIC_STRING)
+#undef SWARMING_SORT_CONSTRUCT_TIMER
+#undef SWARMING_SORT_TIMER_TIC
 #undef SWARMING_SORT_TIMER_TOC
 
 #endif //SWARMING_PROJECT_SAMPLE_SORT_H
