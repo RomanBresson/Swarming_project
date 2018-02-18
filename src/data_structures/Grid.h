@@ -7,6 +7,7 @@
 #include <random>
 #include <vector>
 #include <ostream>
+#include <omp.h>
 
 using types::Position;
 using namespace constants;
@@ -78,17 +79,23 @@ public:
         }
     }*/
 
+    std::vector<Boid<Dimension> > get_neighbours_naive(int i) {
+        std::vector<Boid<Dimension> > neighbours;
+        for(std::size_t j = 0; j < m_boids.size(); ++j){
+            if(i != j && m_boids[i].is_visible(m_boids[j])){
+                neighbours.push_back(m_boids[j]);
+            }
+        }
+        return neighbours;
+    }
+
     /**
      * Computes forces, velocity and then position for all boids and updates them
      */
     void update_all_boids() {
-        for(std::size_t i{0}; i < m_boids.size(); ++i) {
-            std::vector<Boid<Dimension> > neighbours;
-            for(std::size_t j{0}; j < m_boids.size(); ++j){
-                if(i != j && m_boids[i].is_visible(m_boids[j])){
-                    neighbours.push_back(m_boids[j]);
-                }
-            }
+        #pragma omp parallel for
+        for(std::size_t i = 0; i < m_boids.size(); ++i) {
+            std::vector<Boid<Dimension> > neighbours = get_neighbours_naive(i);
             m_boids[i].update_forces(neighbours);
             m_boids[i].update_velocity(neighbours);
         }
