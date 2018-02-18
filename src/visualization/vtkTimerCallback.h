@@ -9,6 +9,7 @@
 
 #include <vector>
 #include <iostream>
+#include <chrono>
 
 #include "data_structures/Grid.h"
 
@@ -46,8 +47,16 @@ public:
     void Execute(vtkObject *caller, unsigned long eventId,
                  void * vtkNotUsed(callData)) override {
         if(eventId == vtkCommand::TimerEvent) {
-            std::cout << "Updating..." << std::flush;
+            std::chrono::time_point<std::chrono::system_clock> start, end;
+            start = std::chrono::system_clock::now();
             update_boids();
+            end = std::chrono::system_clock::now();
+
+            int elapsed_seconds = std::chrono::duration_cast<std::chrono::milliseconds> (end-start).count();
+            std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+
+            std::cout << "elapsed time: " << elapsed_seconds << "ms\n";
+            std::cout << "Updating..." << std::flush;
             vtkRenderWindowInteractor *render_window_interactor{vtkRenderWindowInteractor::SafeDownCast(caller)};
             render_window_interactor->GetRenderWindow()->Render();
             std::cout << "\tUpdate done!" << std::endl;
