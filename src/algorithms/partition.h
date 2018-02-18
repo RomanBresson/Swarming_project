@@ -84,8 +84,9 @@ void partition(Container & container, std::function<UIntType(StoredDataType cons
         MPI_Recv(received_data.back().data(), number_of_elements * sizeof(StoredDataType),
                  MPI_BYTE, p, /*tag*/ 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
-
+    //std::cout << "1" << std::endl;
     container = merge_sorted_arrays_sequential<StoredDataType, std::less<StoredDataType>, Container>(received_data);
+    //std::cout << "2" << std::endl;
 };
 
 #endif //SWARMING_PROJECT_PARTITION_H

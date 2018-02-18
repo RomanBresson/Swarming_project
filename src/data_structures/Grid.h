@@ -19,16 +19,13 @@ using namespace constants;
 template <typename Distribution, std::size_t Dimension>
 class Grid {
 
-    template <typename Dist, std::size_t Dim>
-    friend std::ostream & operator<<(std::ostream & os, Grid<Dist, Dim> const & grid);
-
 public:
 
     /**
      * Constructor for the Grid class.
      * @param number_of_boids The number of randomly-distributed boids initially in the grid.
      */
-    Grid(std::size_t number_of_boids = 0)
+    explicit Grid(std::size_t number_of_boids = 0)
     {
         add_boids(number_of_boids);
     }
@@ -48,15 +45,15 @@ public:
         m_boids.reserve(number_of_boids_to_add);
         std::random_device d;
         std::default_random_engine generator(d());
+        Distribution distribution_pos(BORDER_SEPARATION_MIN_DISTANCE,
+                                      GRID_SIZE-BORDER_SEPARATION_MIN_DISTANCE);
+        Distribution distribution_vel(-MAX_SPEED,MAX_SPEED);
         for(std::size_t j{0}; j < number_of_boids_to_add; ++j) {
             Position<Dimension> pos;
             Velocity<Dimension> vel;
             Force<Dimension>  force;
 
             for(std::size_t i{0}; i < Dimension; ++i) {
-                Distribution distribution_pos(BORDER_SEPARATION_MIN_DISTANCE,
-                                              GRID_SIZE-BORDER_SEPARATION_MIN_DISTANCE);
-                Distribution distribution_vel(-MAX_SPEED,MAX_SPEED);
                 pos[i]   = distribution_pos(generator);
                 vel[i]   = distribution_vel(generator);
                 force[i] = 0.0;
@@ -68,15 +65,6 @@ public:
             this->add_boid(pos, vel, force);
         }
     }
-
-    /** TODO : ADAPT TO NEW CONVENTIONS
-     * Randomly re-create all the boids contained in the Grid.
-     */
-/*    void shuffle() {
-        for(auto & boid : m_boids) {
-            boid = Boid<Dimension>(m_bottom_left, m_top_right);
-        }
-    }*/
 
     /**
      * Computes forces, velocity and then position for all boids and updates them
@@ -96,8 +84,6 @@ public:
             boid.update_position();
         }
     }
-
-//private:
 
     /**
      * All the boids contained in the space represented by this instance.

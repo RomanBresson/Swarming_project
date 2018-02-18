@@ -248,9 +248,10 @@ public:
 
 template <std::size_t Dimension>
 std::ostream & operator<<(std::ostream & os, const Boid<Dimension> & boid) {
-    return os << "Position: " << boid.m_position << std::endl
-              << "\tVelocity: " << boid.m_velocity << std::endl
-              << "\tForce: " << boid.m_force << std::endl;
+    return os << "Boid<" << Dimension << ">("
+              << "Position<" << Dimension << ">(" << boid.m_position << "),"
+              << "Velocity<" << Dimension << ">(" << boid.m_velocity << "),"
+              << "Force<" << Dimension << ">(" << boid.m_force << "))";
 }
 
 template <std::size_t Dimension>

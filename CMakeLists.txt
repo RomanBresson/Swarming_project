@@ -4,7 +4,8 @@ project(Swarming_project)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "-std=gnu++11")
-
+set(CMAKE_BUILD_TYPE "Debug")
+set(CMAKE_LINKER)
 include_directories(src)
 
 find_package(VTK REQUIRED)
@@ -37,8 +38,8 @@ set(SOURCE_FILES
         src/algorithms/partition.h
 		src/algorithms/distributed_scan.h
         src/algorithms/merge_sorted_arrays.h
-        #src/algorithms/points2octree.h
-        #src/algorithms/block_partition.h
+        src/algorithms/points2octree.h
+        src/algorithms/block_partition.h
         src/algorithms/is_sorted_distributed.h
         src/algorithms/sorted_search_distributed.h
 		src/algorithms/sorted_count_distributed.h
