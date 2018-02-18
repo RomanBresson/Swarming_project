@@ -124,7 +124,12 @@ static std::vector<T> select_splitters(std::vector<T> & array, int process_ID, i
 }
 
 template <typename T, typename Comp = std::less<T>>
-static void distributed_sort(std::vector<T> & array, int process_number, int process_ID, Comp comp = Comp()) {
+static void sample_sort_inplace(std::vector<T> & array, Comp comp = Comp()) {
+
+    int process_ID, process_number;
+
+    MPI_Comm_size(MPI_COMM_WORLD, &process_number);
+    MPI_Comm_rank(MPI_COMM_WORLD, &process_ID);
 
     if(process_number < 2) {
         std::cerr << "The distributed_sort procedure should only be called with 2 or more processors." << std::endl
@@ -145,7 +150,7 @@ static void distributed_sort(std::vector<T> & array, int process_number, int pro
     // And now each process sends its data to the process that should manage them.
     std::vector<std::size_t> index_delimitation{0};            // Stores the indexes where we splitted the buckets.
     std::vector<std::size_t> sizes(selected_splitters.size()); // Stored the number of elements of each bucket.
-    // Important becase we don't want a reallocation (asynchronous communications).
+    // Important because we don't want a reallocation (asynchronous communications).
     MPI_Request              ignored_request;                  // We perform synchronous MPI_Recv so we don't need to wait for the asynchronous request.
     std::size_t              bucket_index{0};                  // Index of the current bucket (i.e. index of the processor that should handle it).
     SWARMING_SORT_TIMER_TIC("sending buckets")

@@ -5,7 +5,7 @@
 #include <list>
 #include <algorithm>
 #include <iterator>
-#include "mpi/sample_sort.h"
+#include "algorithms/sample_sort.h"
 
 #include "definitions/types.h"
 #include "definitions/constants.h"

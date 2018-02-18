@@ -2,18 +2,17 @@
 #define SWARMING_PROJECT_IS_SORTED_DISTRIBUTED_H
 
 #include <algorithm>
+#include <functional>
 
 #include "mpi.h"
 
-template <typename Container>
-bool is_sorted_distributed(Container const & container) {
-
-    using StoredDataType = typename Container::value_type;
+template <typename Container, typename StoredDataType = typename Container::value_type, typename Comp = std::less<StoredDataType>>
+bool is_sorted_distributed(Container const & container, Comp comp = Comp()) {
 
     bool local_result, global_result;
 
     // Check first the sorted property locally on each processor.
-    local_result = std::is_sorted(container.begin(), container.end());
+    local_result = std::is_sorted(container.begin(), container.end(), comp);
     // All the processors should agree, so if one processor is not sorted, then all the processors should return false.
     MPI_Allreduce(&local_result, &global_result, 1, MPI_CXX_BOOL, MPI_LAND, MPI_COMM_WORLD);
     if(!global_result) return false;
@@ -33,7 +32,7 @@ bool is_sorted_distributed(Container const & container) {
         StoredDataType tmp;
         MPI_Recv(&tmp, sizeof(StoredDataType), MPI_BYTE, process_ID - 1, /*tag*/ 0, MPI_COMM_WORLD,
                  MPI_STATUS_IGNORE);
-        if (tmp > container.front())
+        if (comp(container.front(), tmp))
             local_result = false;
     }
 

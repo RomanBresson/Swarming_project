@@ -5,12 +5,21 @@
 #include <algorithm>
 
 #include "mpi.h"
+#include "definitions/constants.h"
 
+#if SWARMING_DO_ALL_CHECKS == 1
+#include <cassert>
+#include "algorithms/is_sorted_distributed.h"
+#endif
 
 template <typename Container, typename StoredDataType = typename Container::value_type, typename Comp = std::less<StoredDataType>>
 bool sorted_search_distributed(Container const & distributed_container,
                                StoredDataType const & value_to_search,
                                Comp comp = Comp()) {
+
+#if SWARMING_DO_ALL_CHECKS == 1
+    assert(is_sorted_distributed(distributed_container, comp));
+#endif
 
     bool local_found, global_found;
 

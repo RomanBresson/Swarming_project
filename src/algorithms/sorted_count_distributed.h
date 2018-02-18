@@ -5,12 +5,21 @@
 #include <algorithm>
 
 #include "mpi.h"
+#include "definitions/constants.h"
 
+#if SWARMING_DO_ALL_CHECKS == 1
+#include <cassert>
+#include "algorithms/is_sorted_distributed.h"
+#endif
 
 template <typename Container, typename StoredDataType = typename Container::value_type, typename Comp = std::less<StoredDataType>>
 std::size_t sorted_count_distributed(Container const & distributed_container,
                                      StoredDataType const & value_to_search,
                                      Comp comp = Comp()) {
+
+#if SWARMING_DO_ALL_CHECKS == 1
+    assert(is_sorted_distributed(distributed_container, comp));
+#endif
 
     // Compute first the local number of value_to_search.
     auto const bounds = std::equal_range(distributed_container.begin(), distributed_container.end(), value_to_search, comp);

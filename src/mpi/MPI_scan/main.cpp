@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "mpi.h"
-#include "../scan.h"
+#include "algorithms/distributed_scan.h"
 
 int main ( int argc , char** argv )
 {

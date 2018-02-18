@@ -5,10 +5,10 @@
 #include <algorithm>
 
 #include "mpi.h"
-#include "mpi/scan.h"
 
 #include "definitions/constants.h"
 #include "algorithms/merge_sorted_arrays.h"
+#include "algorithms/distributed_scan.h"
 
 #if SWARMING_DO_ALL_CHECKS == 1
 #include <cassert>
