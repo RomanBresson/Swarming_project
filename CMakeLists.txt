@@ -8,7 +8,7 @@ find_package(OpenMP)
 if (OPENMP_FOUND)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}") 
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 include_directories(src)
 
@@ -42,8 +42,8 @@ set(SOURCE_FILES
         src/algorithms/partition.h
 		src/algorithms/distributed_scan.h
         src/algorithms/merge_sorted_arrays.h
-        #src/algorithms/points2octree.h
-        #src/algorithms/block_partition.h
+        src/algorithms/points2octree.h
+        src/algorithms/block_partition.h
         src/algorithms/is_sorted_distributed.h
         src/algorithms/sorted_search_distributed.h
 		src/algorithms/sorted_count_distributed.h

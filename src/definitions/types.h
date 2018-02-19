@@ -26,11 +26,11 @@ namespace types {
 
 template <typename T, std::size_t S>
 std::ostream & operator<<(std::ostream & os, const types::ArrayType<T,S> & array) {
-    os << "(";
+    os << "{";
     for(std::size_t i{0}; i < S-1; ++i) {
         os << array[i] << ",";
     }
-    return os << array[S-1] << ")";
+    return os << array[S-1] << "}";
 };
 
 #endif //SWARMING_PROJECT_TYPES_H

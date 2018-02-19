@@ -17,6 +17,15 @@
 #include <cassert>
 #endif
 
+template <typename T>
+std::ostream& operator<<(std::ostream & os, std::list<T> const & vec) {
+    os << "(";
+    auto const before_end = std::prev(vec.end());
+    for(auto it = vec.begin(); it != before_end; ++it)
+        os << *it << ",";
+    return os << *before_end << ")";
+}
+
 template <std::size_t Dimension>
 std::vector<Octree<Dimension>> complete_octree(std::list<Octree<Dimension>> partial_list)
 {
@@ -31,7 +40,6 @@ std::vector<Octree<Dimension>> complete_octree(std::list<Octree<Dimension>> part
     assert(is_sorted_distributed(partial_list));
 #endif
 
-
     partial_list = remove_duplicates(partial_list);
     partial_list = linearise(partial_list);
 
@@ -39,10 +47,11 @@ std::vector<Octree<Dimension>> complete_octree(std::list<Octree<Dimension>> part
     partition(partial_list, weight);
 
     Octree<Dimension> root;
+    for(std::size_t d{0}; d < Dimension; ++d)
+        root.m_anchor[d] = 0.0;
+    root.m_depth = 0;
 
-    // TODO: check here, possible bug:
-    // They take the first/last child, but they probably correspond to a specific octant (probably the child octant
-    // with the lowest/highest morton index). We need to check that get_children has the right behaviour.
+    // TODO: Problem here!
     if (process_ID == 0) {
         partial_list.push_front(root.get_dfd()
                                         .get_closest_ancestor(partial_list.front())
@@ -79,6 +88,10 @@ std::vector<Octree<Dimension>> complete_octree(std::list<Octree<Dimension>> part
 
     // We need to ensure that all no process will exit the method before its sending operation is complete.
     MPI_Barrier(MPI_COMM_WORLD);
+
+#if SWARMING_DO_ALL_CHECKS == 1
+    assert(is_sorted_distributed(completed_octree));
+#endif
 
     return completed_octree;
 }

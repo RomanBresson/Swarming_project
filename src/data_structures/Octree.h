@@ -165,7 +165,7 @@ public:
 
     Octree<Dimension> get_dfd() const{
         Octree<Dimension> dfd(m_anchor, constants::Dmax);
-        return(dfd);
+        return dfd;
     }
 
     Octree<Dimension> get_dld() const{
@@ -179,8 +179,6 @@ public:
     }
 
     std::vector<Octree<Dimension>> get_siblings() const {
-        // TODO: check that the siblings are ordered!!
-        // The same as checking that get_children() is ordered.
         std::vector<Octree<Dimension>> siblings;
         if(m_depth == 0) return siblings;
         for(auto possible_sibling : this->get_father().get_children()) {
@@ -192,6 +190,16 @@ public:
     }
 
 };
+
+template <std::size_t Dimension>
+bool operator==(const Octree<Dimension> & oct1, const Octree<Dimension> & oct2) {
+    return oct1.m_depth == oct2.m_depth && oct1.m_anchor == oct2.m_anchor;
+}
+
+template <std::size_t Dimension>
+bool operator!=(const Octree<Dimension> & oct1, const Octree<Dimension> & oct2) {
+    return oct1.m_depth != oct2.m_depth || oct1.m_anchor != oct2.m_anchor;
+}
 
 template <std::size_t Dimension>
 bool operator<(const Octree<Dimension> & oct1, const Octree<Dimension> & oct2) {
