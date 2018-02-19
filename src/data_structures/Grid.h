@@ -99,8 +99,10 @@ public:
             m_boids[i].update_forces(neighbours);
             m_boids[i].update_velocity(neighbours);
         }
-        for(auto & boid : m_boids) {
-            boid.update_position();
+        #pragma omp barrier
+        #pragma omp parallel for
+        for(std::size_t i = 0; i < m_boids.size(); ++i) {
+            m_boids[i].update_position();
         }
     }
 
